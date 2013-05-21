@@ -1,17 +1,19 @@
 package com.jgefroh.core;
 
 
-import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
 
 /**
- * This is a default implementation of a system. It does not do anything.
+ * This is an abstract implementation of a {@code System}.
+ * 
  * @author Joseph Gefroh
+ * @version 0.1.1
+ * @since 	20MAY13
  */
-public class System implements ISystem
+public abstract class System implements ISystem
 {	
 	//////////
 	// DATA
@@ -22,39 +24,31 @@ public class System implements ISystem
 	/**Flag that shows whether the system is running or not.*/
 	private boolean isRunning;
 	
-	/**Logger for debug purposes.*/
-	private final static Logger LOGGER 
-		= Logger.getLogger(System.class.getName());
-	
 	/**The level of detail in debug messages.*/
 	private Level debugLevel = Level.FINE;
 	
+	/**Logger for debug purposes.*/
+	private final Logger LOGGER 
+		= LoggerFactory.getLogger(this.getClass(), debugLevel);
+	
 	private String name;
-	
-	//////////
-	// INIT
-	//////////
-	
-	/**
-	 * Initialize the Logger with default settings.
-	 */
-	private void initLogger()
-	{
-		ConsoleHandler ch = new ConsoleHandler();
-		ch.setLevel(debugLevel);
-		LOGGER.addHandler(ch);
-		LOGGER.setLevel(debugLevel);
-		LOGGER.setUseParentHandlers(false);
-	}
 	
 	
 	//////////
 	// ISYSTEM INTERFACE
 	//////////
+	/**
+	 * Creates an instance of this {@code System}.
+	 * @param core	a reference to the Core controlling this system
+	 */
+	public System(final Core core)
+	{
+		this.core = core;
+	}
+	
 	@Override
 	public void init()
 	{
-		initLogger();
 		isRunning = true;
 	}
 	

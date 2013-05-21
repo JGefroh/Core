@@ -11,15 +11,14 @@ import java.util.logging.Logger;
 
 
 /**
- * The core class is the heart of the game.
- * It keeps track of all Entities, InfoPacks, and Systems.
- * It monitors Entities for changes in their composition, and automatically
- * updates their associated InfoPacks.
- * @author Joseph Gefroh
- * @version 0.1.0
- * @since	18MAY13
+ * An implementation of the {@code ICore} interface.
+ * 
+ * @author 	Joseph Gefroh
+ * @see		ICore
+ * @version 1.1
+ * @since	20MAY13
  */
-public class Core
+public class Core implements ICore
 {
 	//////////
 	// DATA
@@ -49,7 +48,7 @@ public class Core
 	// INIT
 	//////////
 	/**
-	 * Initialize the Logger's settings.
+	 * Initializes the Logger's settings.
 	 */
 	private void initLogger()
 	{
@@ -74,11 +73,7 @@ public class Core
 		LOGGER.log(Level.INFO, "Core started.");
 	}
 	
-	/**
-	 * Start tracking and using an entity.
-	 * This also generates all of the InfoPacks associated with the entity.
-	 * @param entity	the IEntity to track
-	 */
+	@Override
 	public void addEntity(final IEntity entity)
 	{
 		if(entity!=null&&entities.contains(entity)==false)
@@ -89,11 +84,7 @@ public class Core
 		}
 	}
 	
-	/**
-	 * Start tracking and using an info pack associated with a given entity.
-	 * @param entity		the entity that "owns" the InfoPack
-	 * @param infoPack		the InfoPack to track
-	 */
+	@Override
 	public void addInfoPack(final IEntity entity, final IInfoPack infoPack)
 	{	
 		if(infoPack!=null&&infoPacks.containsValue(infoPack)==false)
@@ -115,10 +106,7 @@ public class Core
 		}
 	}
 	
-	/**
-	 * Begin using an InfoPack factory to generate InfoPacks of a specific type.
-	 * @param factory	the Factory to begin using
-	 */
+	@Override
 	public void addFactory(final IInfoPackFactory factory)
 	{
 		if(factory!=null&&packFactories.contains(factory)==false)
@@ -128,17 +116,7 @@ public class Core
 		}
 	}
 
-	/**
-	 * Begin tracking and using a system.
-	 * @param system	the System to track and use
-	 * @param priority	the priority of the system
-	 * 					</br> Systems execute based on their priority level.
-	 * 					</br> 0 is the highest priority, with increasing numbers 
-	 * 					being of lower priority.
-	 * 					</br> A priority of -1 is used to indicate the lowest 
-	 * 					current priority and should be used when the order
-	 * 					of execution does not matter for the system.					
-	 */
+	@Override
 	public void addSystem(final ISystem system, final int priority)
 	{
 		if(system!=null&&systems.contains(system)==false)
@@ -157,10 +135,7 @@ public class Core
 		}
 	}
 
-	/**
-	 * Stop tracking an entity.
-	 * @param entity	the Entity to stop tracking.
-	 */
+	@Override
 	public void removeEntity(final IEntity entity)
 	{
 		LOGGER.log(Level.FINER, "Untracking entity: " + entity);
@@ -171,10 +146,7 @@ public class Core
 		}
 	}
 	
-	/**
-	 * Stop using an InfoPack.
-	 * @param infoPack	the InfoPack to stop using.
-	 */
+	@Override
 	public void removeInfoPack(final IInfoPack infoPack)
 	{
 		if(infoPack!=null)
@@ -190,10 +162,7 @@ public class Core
 		}
 	}
 
-	/**
-	 * Stop using a system.
-	 * @param system	the System to stop using.
-	 */
+	@Override
 	public void removeSystem(final ISystem system)
 	{
 		if(system!=null)
@@ -204,11 +173,7 @@ public class Core
 		}
 	}
 	
-	/**
-	 * Retrieve all tracked InfoPacks of a specific type.
-	 * @param	t	the Class type of info pack to return
-	 * @return		all tracked InfoPacks of the given type.
-	 */
+	@Override
 	public <T extends IInfoPack> ArrayList<T> getInfoPacksOfType(Class<T> t)
 	{
 		ArrayList<T> packs = new ArrayList<T>();
@@ -229,13 +194,8 @@ public class Core
 		}
 		return packs;
 	}
-	
-	/**
-	 * Get a specific InfoPack belonging to a specific entity.
-	 * @param entity	the Entity that owns the InfoPack
-	 * @param type		the type of InfoPack to get
-	 * @return	an InfoPack of the type requested, null if not found.
-	 */
+
+	@Override
 	public <T extends IInfoPack>T getInfoPackFrom(final IEntity entity, 
 													final Class<T> type)
 	{
@@ -253,11 +213,7 @@ public class Core
 		return null;
 	}
 
-	/**
-	 * Get a system of a specific type
-	 * @param t	the Class type of system
-	 * @return	the System, if found. Null otherwise.
-	 */
+	@Override
 	public <T extends ISystem> T getSystem(Class<T> t)
 	{
 		for(ISystem each:systems)
@@ -270,9 +226,7 @@ public class Core
 		return null;
 	}
 	
-	/**
-	 * Ensure all entities have updated InfoPacks, and then execute the system.
-	 */
+	@Override
 	public void work()
 	{
 		for(IEntity each:entities)
@@ -289,10 +243,7 @@ public class Core
 		}
 	}
 	
-	/**
-	 * Generate InfoPacks with known factories for the given entity.
-	 * @param entity	the Entity to generate InfoPacks for
-	 */
+	@Override
 	public void generateInfoPacks(final IEntity entity)
 	{
 		if(entity!=null)
@@ -311,11 +262,19 @@ public class Core
 		}
 	}
 	
+	/**
+	 * Sets the granularity of the debug messages that are printed.
+	 * @param debugLevel	the Level of messages that should be printed
+	 */
 	public void setDebugLevel(final Level debugLevel)
 	{
 		this.debugLevel = debugLevel;
 	}
 	
+	/**
+	 * Gets the current granularity of debug messages that are printed.
+	 * @return	the current logging Level of messages that are printed
+	 */
 	public Level getDebugLevel()
 	{
 		return this.debugLevel;
