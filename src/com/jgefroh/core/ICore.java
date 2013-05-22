@@ -2,6 +2,7 @@ package com.jgefroh.core;
 
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 
 
@@ -90,9 +91,9 @@ public interface ICore
 	/**
 	 * Gets {@code InfoPacks} of a specific Class type.
 	 * @param t	the Class type of the InfoPacks to retrieve
-	 * @return	an ArrayList with only the InfoPacks of the passed type
+	 * @return	an Iterator over a collection of all matching InfoPacks
 	 */
-	public <T extends IInfoPack> ArrayList<T> getInfoPacksOfType(Class<T> t);
+	public <T extends IInfoPack> Iterator<T> getInfoPacksOfType(Class<T> t);
 	
 	/**
 	 * Gets a specific {@code InfoPack} from the passed {@code Entity}.

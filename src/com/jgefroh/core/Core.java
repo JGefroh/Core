@@ -3,6 +3,7 @@ package com.jgefroh.core;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -23,7 +24,7 @@ public class Core implements ICore
 	//////////
 	// DATA
 	//////////
-	//TODO: Use iterator for concurrent modification of ALs.
+	//TODO: Switch to LinkedLists?
 	/**Holds all of the InfoPacks associated with an entity.*/
 	private HashMap<IEntity, ArrayList<IInfoPack>> infoPacks;
 	
@@ -174,7 +175,7 @@ public class Core implements ICore
 	}
 	
 	@Override
-	public <T extends IInfoPack> ArrayList<T> getInfoPacksOfType(Class<T> t)
+	public <T extends IInfoPack> Iterator<T> getInfoPacksOfType(Class<T> t)
 	{
 		ArrayList<T> packs = new ArrayList<T>();
 		Set<IEntity> entitySet = infoPacks.keySet();
@@ -192,7 +193,7 @@ public class Core implements ICore
 				}
 			}
 		}
-		return packs;
+		return packs.iterator();
 	}
 
 	@Override
