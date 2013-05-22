@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  * 
  * @author 	Joseph Gefroh
  * @see		ICore
- * @version 1.1
+ * @version 0.2.0
  * @since	20MAY13
  */
 public class Core implements ICore
