@@ -25,7 +25,7 @@ package com.jgefroh.core;
  * @see		IInfoPackFactory
  * @see		ISystem
  * @version	0.1.0
- * @since 	20MAY13
+ * @since 	0.1.0
  */
 public interface IInfoPack
 {

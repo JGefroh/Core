@@ -20,7 +20,7 @@ package com.jgefroh.core;
  * @author 	Joseph Gefroh
  * @see		IEntity
  * @version 0.1.0
- * @since 	20MAY13
+ * @since 	0.1.0
  */
 public interface IComponent
 {

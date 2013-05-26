@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  * 
  * @author Joseph Gefroh
  * @version 0.1.0
- * @since 20MAY13
+ * @since 0.1.0
  */
 public abstract class LoggerFactory
 {	
@@ -29,7 +29,7 @@ public abstract class LoggerFactory
 	 * @param debugLevel	the Level of the debug messages that are printed	
 	 * @return				a Logger with the given settings
 	 */
-	public static Logger getLogger(final Class type, final Level debugLevel)
+	public static Logger getLogger(final Class<?> type, final Level debugLevel)
 	{
 		Logger LOGGER = Logger.getLogger(type.getName());
 		ConsoleHandler ch = new ConsoleHandler();

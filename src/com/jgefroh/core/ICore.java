@@ -1,10 +1,6 @@
 package com.jgefroh.core;
 
-
-import java.util.ArrayList;
 import java.util.Iterator;
-
-
 
 /**
  * The interface for the {@code Core}.
@@ -34,8 +30,8 @@ import java.util.Iterator;
  * @see		IInfoPackFactory
  * @see		ISystem
  * @see		IEntity
- * @version 0.2.0
- * @since	20MAY13
+ * @version 0.3.0
+ * @since	0.1.0
  */
 public interface ICore
 {

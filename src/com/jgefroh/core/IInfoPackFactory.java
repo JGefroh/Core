@@ -11,12 +11,12 @@ package com.jgefroh.core;
  * 
  * @author Joseph Gefroh
  * @version 0.1.0
- * @since 20MAY13
+ * @since 0.1.0
  */
 public interface IInfoPackFactory
 {
 	/**
-	 * Create an {@code InfoPack} based on the {@code components} the passed 
+	 * Creates an {@code InfoPack} based on the {@code components} the passed 
 	 * {@code Entity} has.
 	 * 
 	 * <p>
@@ -25,7 +25,6 @@ public interface IInfoPackFactory
 	 * </p>
 	 * @param entity	the entity for which this InfoPack is being generated
 	 * @return			the generated InfoPack
-	 * @since 0.1.0
 	 */
 	public <T extends IInfoPack>T generate(final IEntity entity);
 }

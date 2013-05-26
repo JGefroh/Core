@@ -16,8 +16,8 @@ import java.util.logging.Logger;
  * 
  * @author 	Joseph Gefroh
  * @see		ICore
- * @version 0.2.0
- * @since	20MAY13
+ * @version 0.3.0
+ * @since	0.1.0
  */
 public class Core implements ICore
 {
@@ -25,6 +25,7 @@ public class Core implements ICore
 	// DATA
 	//////////
 	//TODO: Switch to LinkedLists?
+	 //TODO: Get rid of UncheckedCast warnings w/o suppressing them.
 	/**Holds all of the InfoPacks associated with an entity.*/
 	private HashMap<IEntity, ArrayList<IInfoPack>> infoPacks;
 	
@@ -174,6 +175,7 @@ public class Core implements ICore
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends IInfoPack> Iterator<T> getInfoPacksOfType(Class<T> t)
 	{
@@ -196,6 +198,7 @@ public class Core implements ICore
 		return packs.iterator();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends IInfoPack>T getInfoPackFrom(final IEntity entity, 
 													final Class<T> type)
@@ -213,7 +216,8 @@ public class Core implements ICore
 		}
 		return null;
 	}
-
+	
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends ISystem> T getSystem(Class<T> t)
 	{

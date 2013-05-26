@@ -11,26 +11,24 @@ package com.jgefroh.core;
  * 
  * @author 	Joseph Gefroh
  * @see		IComponent
- * @version 0.1.0
- * @since	20MAY13
+ * @version 0.3.0
+ * @since	0.1.0
  */
 public interface IEntity
 {
 	/**
-	 * Adds a {@code Component} of the passed type to this {@code Entity}.
-	 * @param type		the Class type of the component to add
-	 * @param component	the instance of the component (must be the same type)
+	 * Adds a {@code Component} to this {@code Entity}.
+	 * @param component	the instance of the component to add
 	 */
-	public <T extends IComponent> void addComponent(final Class<T> type, 
-			final T component);
+	public void addComponent(final IComponent component);
 	
 	/**
 	 * Gets the {@code Component} of the passed type from this {@code Entity}.
 	 * @param type	the Class type of the component to retrieve
 	 * @return		the component of the passed type saved in this Entity; null
-	 * 				if the component does not exist.
+	 * 				if the component does not exist
 	 */
-	public <T>T getComponent(final Class<T> type);
+	public <T extends IComponent>T getComponent(final Class<T> type);
 	
 	/**
 	 * Removes the {@code Component} of the passed type from this 

@@ -6,16 +6,18 @@ import java.util.HashMap;
 /**
  * A default implementation of the IEntity interface.
  * @author Joseph Gefroh
- * @version 0.1.0
- * @since	16MAY13
+ * @version 0.2.0
+ * @since	0.1.0
  */
 public class Entity implements IEntity
 {
 	//////////
 	// DATA
 	//////////
+	//TODO: Get rid of class cast warnings without suppressing them.
 	/**Holds the components that belong to this entity.*/
-	private HashMap<Class, IComponent> components;	//Uses class type to store
+	private HashMap<Class<? extends IComponent>, IComponent> components;
+	//TODO: Research pitfalls of Class as key - supposedly causes memory leaks
 	
 	/**Flag that shows whether the entity's state has changed.*/
 	private boolean hasChanged = false;
@@ -32,15 +34,29 @@ public class Entity implements IEntity
 	 */
 	public Entity()
 	{
-		components = new HashMap<Class, IComponent>();
-		hasChanged = true;
+		init();
 	}
 	
+	/**
+	 * Constructor to instantiate an {@code Entity} with the given name.
+	 * @param name	the human-readable, non-unique name of the entity
+	 */
+	public Entity(final String name)
+	{
+		setName(name);
+	}
+	
+	private void init()
+	{
+		this.components = new HashMap<Class<? extends IComponent>, IComponent>();
+		this.hasChanged = true;
+	}
 	//////////
 	// GETTERS
 	//////////
+	@SuppressWarnings("unchecked")
 	@Override
-	public <T>T getComponent(Class<T> type)
+	public <T extends IComponent>T getComponent(Class<T> type)
 	{
 		T t = (T)components.get(type);
 		if(t!=null)
@@ -48,7 +64,7 @@ public class Entity implements IEntity
 			return t;
 		}
 		else
-		{
+		{//Returns null anyways :X
 			return null;
 		}
 	}
@@ -85,9 +101,9 @@ public class Entity implements IEntity
 	// SYSTEM METHODS
 	//////////
 	@Override
-	public <T extends IComponent> void addComponent(Class<T> type, T component)
+	public void addComponent(final IComponent component)
 	{
-		components.put(type, (IComponent)component);
+		components.put(component.getClass(), component);
 		hasChanged = true;
 	}
 	

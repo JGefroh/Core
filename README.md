@@ -13,7 +13,7 @@ Disclaimer: As a WIP, Core's functionality may change greatly between versions.
 3. Import and use where necessary.
 
 ### Usage directions:
-1. Check out the [Javadoc](http://jgefroh.github.io/Core/doc/index.html)
+1. Check out the [Javadoc](http://jgefroh.github.io/Core/doc/index.html).
 2. Code to your heart's content.
 
 
