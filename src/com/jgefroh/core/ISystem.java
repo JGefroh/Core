@@ -38,8 +38,9 @@ public interface ISystem
 	/**
 	 * Executes this {@code System's} work if it is ready.
 	 * This method is called automatically by {@code Core}.
+	 * @param now the current time
 	 */
-	public void work();
+	public void work(final long now);
 	
 	/**
 	 * Sets the flag that marks this {@code System} as not ready.
@@ -49,16 +50,31 @@ public interface ISystem
 	public void stop();
 	
 	/**
-	 * Tells this {@code System} to do something.
-	 * This is an experimental feature to test cross-system communication.
+	 * Sets the number of ms this {@code System} will wait between executions.
+	 * @param waitTime the number of ms to wait before doing work
 	 */
-	//public String send(final String message);
+	public void setWait(final long waitTime);
 	
 	/**
-	 * Gets the name of this {@code System}.
-	 * This is an experimental feature to test cross-system communication.
-	 * It facilitates obtaining a reference to a {@code System} without knowing
-	 * the exact class name.
+	 * Sets the time this {@code System} was last run.
+	 * @param	last	the time this System was last run, in ms
 	 */
-	//public void getName(final String name);
+	public void setLast(final long last);
+	
+	/**
+	 * Gets the number of ms this {@code System} between executions.
+	 */
+	public long getWait();
+	
+	/**
+	 * Gets the time, in ms, this {@code System} was last executed.
+	 * @return	the time, in ms, of last execution
+	 */
+	public long getLast();
+	
+	/**
+	 * Sends a message to this {@code System}.
+	 * @param message	the message to send
+	 */
+	public void recv(final String id, final String... message);
 }

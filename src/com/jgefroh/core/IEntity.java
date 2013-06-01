@@ -23,6 +23,12 @@ public interface IEntity
 	public void addComponent(final IComponent component);
 	
 	/**
+	 * Adds the given {@code Component} to this {@code Entity}.
+	 * @param component	the instance of the component to add
+	 */
+	public void add(final IComponent component);
+	
+	/**
 	 * Gets the {@code Component} of the passed type from this {@code Entity}.
 	 * @param type	the Class type of the component to retrieve
 	 * @return		the component of the passed type saved in this Entity; null
@@ -77,5 +83,22 @@ public interface IEntity
 	 * @param name	the name of this Entity, if it was given one
 	 */
 	public void setName(final String name);
+	
+	/**
+	 * Sets the unique ID of this {@code Entity}.
+	 * 
+	 * <p>
+	 * The {@code ID} should not be used by any other object.
+	 * </p>
+	 * 
+	 * @return	the unique ID of this Entity
+	 */
+	public String getID();
+	
+	/**
+	 * Gets the unique ID of this {@code Entity}.
+	 * @param id	the unique ID of this Entity
+	 */
+	public void setID(final String id);
 
 }

@@ -30,7 +30,7 @@ import java.util.Iterator;
  * @see		IInfoPackFactory
  * @see		ISystem
  * @see		IEntity
- * @version 0.3.0
+ * @version 0.4.0
  * @since	0.1.0
  */
 public interface ICore
@@ -38,16 +38,16 @@ public interface ICore
 	/**
 	 * Starts tracking the passed {@code Entity}.
 	 * This should also generate the {@code InfoPacks} for the {@code Entity}.
+	 * This should also generate a unique ID for the {@code Entity}.
 	 * @param entity	the Entity to begin tracking
 	 */
 	public void addEntity(final IEntity entity);
 	
 	/**
 	 * Starts tracking the passed {@code InfoPack}.
-	 * @param entity	the Entity whose components the InfoPack is grouping
 	 * @param infoPack	the InfoPack to start tracking
 	 */
-	public void addInfoPack(final IEntity entity, final IInfoPack infoPack);
+	public void addInfoPack(final IInfoPack infoPack);
 	
 	/**
 	 * Starts using the passed {@code InfoPackFactory} to generate 
@@ -57,13 +57,19 @@ public interface ICore
 	public void addFactory(final IInfoPackFactory factory);
 		
 	/**
-	 * Starts tracking the passed {@code System}.
+	 * Starts tracking the passed {@code System} as a non-critical system.
 	 * This should ensure that the {@code System} is started.
 	 * @param system	the System to begin tracking
-	 * @param priority	the order in which the System should be executed
 	 */
-	public void addSystem(final ISystem system, final int priority);
-
+	public void addSystem(final ISystem system);
+	
+	/**
+	 * Starts tracking the passed {@code System}.
+	 * @param system		the System to begin tracking
+	 * @param isCritical	true if the System should always run, false otherwise;
+	 */
+	public void addSystem(final ISystem system, final boolean isCritical);
+	
 	/**
 	 * Stops tracking the passed {@code Entity}.
 	 * This should ensure that the associated {@code InfoPacks} are removed.
@@ -71,6 +77,37 @@ public interface ICore
 	 */
 	public void removeEntity(final IEntity entity);
 	
+	/**
+	 * Stops tracking the {@code Entity} with the passed id.
+	 * This should ensure that the associated {2code InfoPacks} are removed.
+	 * @param id	the ID of the Entity to stop tracking
+	 */
+	public void removeEntity(final String id);
+	
+	/**
+	 * Returns the {@code Entity} with the specific ID.
+	 * @param id	the unique ID of the Entity to retrieve
+	 * @return		the Entity that  has the ID;null if no Entity was found
+	 */
+	public IEntity getEntityWithID(final String id);
+	
+	/**
+	 * Returns a generated ID that is guaranteed to be unique.
+	 * @return	the unique ID
+	 */
+	public String generateID();
+	
+	/**
+	 * Stops tracking all {@code Entities}.
+	 */
+	public void removeAllEntities();
+	
+	/**
+	 * Stops tracking all entities with the given component.
+	 * @param	type	the component that removed entities should have
+	 */
+	public <T extends IComponent> void removeEntitiesWith(final Class<T> type);
+
 	/**
 	 * Stops tracking the passed {@code InfoPack}.
 	 * @param infoPack	the InfoPack to stop tracking
@@ -83,6 +120,11 @@ public interface ICore
 	 * @param system	the System to stop tracking
 	 */
 	public void removeSystem(final ISystem system);
+	
+	/**
+	 * Stops tracking all {@code Systems}.
+	 */
+	public void removeAllSystems();
 	
 	/**
 	 * Gets {@code InfoPacks} of a specific Class type.
@@ -103,6 +145,14 @@ public interface ICore
 													final Class<T> type);
 	
 	/**
+	 * Gets a specific {@code InfoPack} from the {@code Entity} with the ID.
+	 * @param id	the unique ID of the Entity to retrieve the pack from
+	 * @param type	the type of InfoPack to retrieve
+	 * @return		the InfoPack if found; null otherwise
+	 */
+	public <T extends IInfoPack>T getInfoPackFrom(final String id, 
+													final Class<T> type);
+	/**
 	 * Gets a {@code System} that is being tracked by {@code Core}.
 	 * @param t	the Class type of the System whose reference to return
 	 * @return	the System of the desired type
@@ -122,4 +172,6 @@ public interface ICore
 	 * @param entity	the Entity for whom the InfoPacks are being generated
 	 */
 	public void generateInfoPacks(final IEntity entity);
+	
+
 }

@@ -6,7 +6,7 @@ import java.util.HashMap;
 /**
  * A default implementation of the IEntity interface.
  * @author Joseph Gefroh
- * @version 0.2.0
+ * @version 0.4.0
  * @since	0.1.0
  */
 public class Entity implements IEntity
@@ -22,10 +22,11 @@ public class Entity implements IEntity
 	/**Flag that shows whether the entity's state has changed.*/
 	private boolean hasChanged = false;
 	
-	/**The non-unique name of the entity.*/
+	/**The non-unique name of this Entity.*/
 	private String name;
 	
-	
+	/**The unique ID of this Entity.*/
+	private String id;
 	//////////
 	// INIT
 	//////////
@@ -81,7 +82,11 @@ public class Entity implements IEntity
 		return hasChanged;
 	}
 	
-	
+	@Override
+	public String getID()
+	{
+		return this.id;
+	}
 	//////////
 	// SETTERS
 	//////////
@@ -97,14 +102,30 @@ public class Entity implements IEntity
 		this.name = name;
 	}
 	
+	@Override
+	public void setID(final String id)
+	{
+		this.id = id;
+	}
+	
 	//////////
 	// SYSTEM METHODS
 	//////////
 	@Override
 	public void addComponent(final IComponent component)
 	{
-		components.put(component.getClass(), component);
-		hasChanged = true;
+		if(component!=null)
+		{
+			component.setOwner(this);
+			components.put(component.getClass(), component);
+			hasChanged = true;
+		}
+	}
+	
+	@Override
+	public void add(final IComponent component)
+	{
+		addComponent(component);
 	}
 	
 	@Override

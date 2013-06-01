@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  * </p>
  * 
  * @author Joseph Gefroh
- * @version 0.1.0
+ * @version 0.4.0
  * @since 0.1.0
  */
 public abstract class LoggerFactory
