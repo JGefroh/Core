@@ -30,7 +30,7 @@ import java.util.Iterator;
  * @see		IInfoPackFactory
  * @see		ISystem
  * @see		IEntity
- * @version 0.4.0
+ * @version 0.5.0
  * @since	0.1.0
  */
 public interface ICore
@@ -41,41 +41,41 @@ public interface ICore
 	 * This should also generate a unique ID for the {@code Entity}.
 	 * @param entity	the Entity to begin tracking
 	 */
-	public void addEntity(final IEntity entity);
+	public <T extends IEntity> void addEntity(final T entity);
 	
 	/**
 	 * Starts tracking the passed {@code InfoPack}.
 	 * @param infoPack	the InfoPack to start tracking
 	 */
-	public void addInfoPack(final IInfoPack infoPack);
+	public <T extends IInfoPack> void addInfoPack(final T infoPack);
 	
 	/**
 	 * Starts using the passed {@code InfoPackFactory} to generate 
 	 * {@code infoPacks}.
 	 * @param factory	the InfoPackFactory that generates InfoPacks
 	 */
-	public void addFactory(final IInfoPackFactory factory);
+	public <T extends IInfoPackFactory> void addFactory(final T factory);
 		
 	/**
 	 * Starts tracking the passed {@code System} as a non-critical system.
 	 * This should ensure that the {@code System} is started.
 	 * @param system	the System to begin tracking
 	 */
-	public void addSystem(final ISystem system);
+	public <T extends ISystem> void addSystem(final T system);
 	
 	/**
 	 * Starts tracking the passed {@code System}.
 	 * @param system		the System to begin tracking
 	 * @param isCritical	true if the System should always run, false otherwise;
 	 */
-	public void addSystem(final ISystem system, final boolean isCritical);
+	public <T extends ISystem> void addSystem(final T system, final boolean isCritical);
 	
 	/**
 	 * Stops tracking the passed {@code Entity}.
 	 * This should ensure that the associated {@code InfoPacks} are removed.
 	 * @param entity	the Entity to stop tracking
 	 */
-	public void removeEntity(final IEntity entity);
+	public <T extends IEntity> void removeEntity(final IEntity entity);
 	
 	/**
 	 * Stops tracking the {@code Entity} with the passed id.
@@ -89,7 +89,7 @@ public interface ICore
 	 * @param id	the unique ID of the Entity to retrieve
 	 * @return		the Entity that  has the ID;null if no Entity was found
 	 */
-	public IEntity getEntityWithID(final String id);
+	public <T extends IEntity>T getEntityWithID(final String id);
 	
 	/**
 	 * Returns a generated ID that is guaranteed to be unique.
@@ -109,17 +109,11 @@ public interface ICore
 	public <T extends IComponent> void removeEntitiesWith(final Class<T> type);
 
 	/**
-	 * Stops tracking the passed {@code InfoPack}.
-	 * @param infoPack	the InfoPack to stop tracking
-	 */
-	public void removeInfoPack(final IInfoPack infoPack);
-
-	/**
 	 * Stops tracking the passed {@code System}. 
 	 * This should ensure that the {@code System} is stopped.
 	 * @param system	the System to stop tracking
 	 */
-	public void removeSystem(final ISystem system);
+	public <T extends ISystem> void removeSystem(final T system);
 	
 	/**
 	 * Stops tracking all {@code Systems}.
@@ -171,7 +165,5 @@ public interface ICore
 	 * {@code Entity}. 
 	 * @param entity	the Entity for whom the InfoPacks are being generated
 	 */
-	public void generateInfoPacks(final IEntity entity);
-	
-
+	public <T extends IEntity> void generateInfoPacks(final T entity);
 }

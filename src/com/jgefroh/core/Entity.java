@@ -27,6 +27,10 @@ public class Entity implements IEntity
 	
 	/**The unique ID of this Entity.*/
 	private String id;
+	
+	/**The group tag of this Entity.*/
+	private String tag;
+
 	//////////
 	// INIT
 	//////////
@@ -49,9 +53,9 @@ public class Entity implements IEntity
 	
 	private void init()
 	{
-		this.components = new HashMap<Class<? extends IComponent>, IComponent>();
 		this.hasChanged = true;
 	}
+	
 	//////////
 	// GETTERS
 	//////////
@@ -59,15 +63,19 @@ public class Entity implements IEntity
 	@Override
 	public <T extends IComponent>T getComponent(Class<T> type)
 	{
-		T t = (T)components.get(type);
-		if(t!=null)
+		if(components!=null)
 		{
-			return t;
+			T t = (T)components.get(type);
+			if(t!=null)
+			{
+				return t;
+			}
+			else
+			{//Returns null anyways :X
+				return null;
+			}
 		}
-		else
-		{//Returns null anyways :X
-			return null;
-		}
+		return null;
 	}
 	
 	@Override
@@ -114,6 +122,10 @@ public class Entity implements IEntity
 	@Override
 	public void addComponent(final IComponent component)
 	{
+		if(components==null)
+		{
+			createComponentStorage();
+		}
 		if(component!=null)
 		{
 			component.setOwner(this);
@@ -131,10 +143,33 @@ public class Entity implements IEntity
 	@Override
 	public <T> void removeComponent(Class<T> type)
 	{
-		if(components.get(type)!=null)
+		if(components!=null&&components.get(type)!=null)
 		{
 			components.remove(type);
+			hasChanged = true;
 		}
-		hasChanged = true;
+	}
+	
+	public void removeAllComponents()
+	{
+		this.components = null;
+		this.hasChanged = true;
+	}
+	
+	@Override
+	public String getTag()
+	{
+		return this.tag;
+	}
+	
+	@Override
+	public void setTag(final String tag)
+	{
+		this.tag = tag;
+	}
+	
+	private void createComponentStorage()
+	{
+		this.components = new HashMap<Class<? extends IComponent>, IComponent>();
 	}
 }

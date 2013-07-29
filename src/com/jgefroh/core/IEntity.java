@@ -100,5 +100,28 @@ public interface IEntity
 	 * @param id	the unique ID of this Entity
 	 */
 	public void setID(final String id);
+	
+	/**
+	 * Sets the group tag of this {@code Entity}.
+	 * 
+	 * 
+	 * The tag is intended to be used to group entities.
+	 * @param tag	the group tag of this Entity
+	 */
+	public void setTag(final String tag);
+	
+	/**
+	 * Gets the group tag of this {@code Entity}.
+	 * 
+	 * 
+	 * The tag is intended to be used to group entities.
+	 * @return	the tag of this Entity
+	 */
+	public String getTag();
+	
+	/**
+	 * Removes all components of this {@code Entity}.
+	 */
+	public void removeAllComponents();
 
 }

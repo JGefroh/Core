@@ -2,356 +2,241 @@ package com.jgefroh.core;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
 
 /**
- * An implementation of the {@code ICore} interface.
+ * An implementation of the {@code ICore} interface using nodes.
  * 
  * @author 	Joseph Gefroh
  * @see		ICore
- * @version 0.4.0
- * @since	0.1.0
+ * @version 0.1.0
+ * @since 27JUL13
  */
 public class Core implements ICore
 {
-	//////////
-	// DATA
-	//////////
-	//TODO: Switch to LinkedLists?
-	 //TODO: Get rid of UncheckedCast warnings w/o suppressing them.
-	/**Holds all of the InfoPacks associated with an entity.*/
-	private HashMap<IEntity, ArrayList<IInfoPack>> infoPacks;
+	/**Holds the info packs, organized by type.*/
+	private HashMap<Class<? extends AbstractInfoPack>, AbstractInfoPack> infoPacks;
 	
-	/**Holds all of the entities in the game.*/
-	private ArrayList<IEntity> entities;
+	/**Holds the info packs, organized by owning entity.*/
+	private HashMap<IEntity, AbstractInfoPack> entityPacks;
 	
-	/**Holds all of the systems in the game.*/
-	private ArrayList<ISystem> systems;	
+	/**Holds the factories that generate the InfoPacks.*/
+	private ArrayList<IInfoPackFactory> factories;
 	
-	/**Holds all of the critical systems in the game.*/
-	private ArrayList<ISystem> criticalSystems;
+	/**Holds the systems.*/
+	private ArrayList<ISystem> systems;
 	
-	/**Holds all of the InfoPack factories.*/
-	private ArrayList<IInfoPackFactory> packFactories;
+	/**Holds the entities, sorted by ID.*/
+	private HashMap<String, IEntity> entitiesByID;
 	
-	/**Holds all of the used IDs*/
-	private ArrayList<String> usedIDs;
-	
+	/**Holds a list of systems subscribed to different message IDs*/
 	private HashMap<String, ArrayList<ISystem>> subscribers;
 	
-	/**Logger for debugging.*/
-	private final static Logger LOGGER 
-		= Logger.getLogger(Core.class.getName());
+	/**The last ID that was assigned to an entity.*/
+	private long lastID;
+	
+	/**The time, in NS.*/
+	private long timer;
+	
+	/**Used to provide accurate timing.*/
+	private long timeLastChecked;
+	
+	/**FLAG: Indicates whether Core should pause execution or not.*/
+	private boolean isPaused;
+	
+	/**Logger for debug purposes.*/
+	private final Logger LOGGER 
+		= LoggerFactory.getLogger(this.getClass(), Level.OFF);
 	
 	/**The level of detail in debug messages.*/
-	private Level debugLevel = Level.FINE;
+	private Level debugLevel = Level.ALL;
 	
-	/**Flag that indicates whether Core is paused or not.*/
-	private boolean isPaused = false;
-	
-	/**The last ID assigned to an Entity.*/
-	private long lastID = 0;
-	
-	/**The amount of time the simulation has been running (unpaused), in ns.*/
-	private long timer = 0;
-	
-	/**The time the timer was last checked, in ns.*/
-	private long timeLastChecked;
-	//////////
-	// INIT
-	//////////
-	/**
-	 * Initializes the Logger's settings.
-	 */
-	private void initLogger()
-	{
-		ConsoleHandler ch = new ConsoleHandler();
-		ch.setLevel(debugLevel);
-		LOGGER.addHandler(ch);
-		LOGGER.setLevel(debugLevel);
-		LOGGER.setUseParentHandlers(false);
-	}
-	
-	/**
-	 * Create a new Core object.
-	 */
 	public Core()
 	{
-		//TODO: Change to LinkedLists later on for simplicity.
-		initLogger();
-		infoPacks = new HashMap<IEntity, ArrayList<IInfoPack>>();
-		entities = new ArrayList<IEntity>();
+		infoPacks = new HashMap<Class<? extends AbstractInfoPack>, AbstractInfoPack>();
+		entityPacks = new HashMap<IEntity, AbstractInfoPack>();
+		factories = new ArrayList<IInfoPackFactory>();
 		systems = new ArrayList<ISystem>();
-		criticalSystems = new ArrayList<ISystem>();
-		packFactories = new ArrayList<IInfoPackFactory>();
+		entitiesByID = new HashMap<String, IEntity>();
 		subscribers = new HashMap<String, ArrayList<ISystem>>();
 		this.timeLastChecked = System.nanoTime();
-		LOGGER.log(Level.INFO, "Core started.");
 	}
 	
 	@Override
 	public void addEntity(final IEntity entity)
 	{
-		if(entity!=null&&entities.contains(entity)==false)
-		{//if the entity exists and it is not already being tracked...
-			LOGGER.log(Level.FINER, "Tracking entity: " + entity);
-			entity.setID(generateID());
-			entities.add(entity);
+		if(entity!=null&&entitiesByID.get(entity)==null)
+		{
+			if(entity.getID()==null)
+			{
+				entity.setID(generateID());
+			}
+			entitiesByID.put(entity.getID(), entity);
+			LOGGER.log(Level.FINER, "Added entity (" + entity + ")"
+					+ " | " + entity.getName() +" (ID: " +  entity.getID() + ")");
 			generateInfoPacks(entity);
 		}
 	}
-	
+
 	@Override
-	public void addInfoPack(final IInfoPack infoPack)
-	{	
-		if(infoPack!=null&&infoPacks.containsValue(infoPack)==false)
-		{//If the infopack is not already being tracked
-			LOGGER.log(Level.FINEST, "Tracking " + infoPack + " belonging to: " 
-						+ infoPack.getOwner());
-			ArrayList<IInfoPack> entityPacks = infoPacks.get(infoPack.getOwner());
-			if(entityPacks!=null)
-			{//If an arraylist already exists for the info pack
-				entityPacks.add(infoPack);	//Add the info pack to the arraylist
+	public <T extends IInfoPack> void addInfoPack(final T newPack)
+	{
+		AbstractInfoPack addMe = (AbstractInfoPack)newPack;
+
+		if(addMe!=null&&addMe.checkDirty()==false)
+		{
+			AbstractInfoPack head = infoPacks.get(addMe.getClass());
+			
+			if(head!=null)
+			{//There is already an info pack of this type...
+				AbstractInfoPack nextPack = head;
+				while(nextPack!=null)
+				{//Check to see if the info pack already exists.
+					if(nextPack==addMe)
+					{
+						return;	//Found same copy, do nothing.
+					}
+					nextPack = nextPack.next();
+				}
+				addMe.setNext(head);
+				head.setPrev(addMe);
+				infoPacks.put(addMe.getClass(), addMe);
 			}
 			else
-			{//If not...
-				//Construct an array list.
-				entityPacks = new ArrayList<IInfoPack>();
-				entityPacks.add(infoPack);
-				infoPacks.put(infoPack.getOwner(), entityPacks);
+			{//There is no info pack of this type already.
+				infoPacks.put(addMe.getClass(), addMe);
+			}
+			
+			
+			AbstractInfoPack ptrPack = entityPacks.get(addMe.getOwner());
+			if(ptrPack==null)
+			{//This is the first info pack the owner has
+				entityPacks.put(addMe.getOwner(), addMe);
+			}
+			else
+			{//The owner of the info pack has other info packs...
+				addMe.setOwnerNext(ptrPack);
+				ptrPack.setOwnerPrev(addMe);
+				entityPacks.put(addMe.getOwner(),  addMe);
 			}
 		}
 	}
 	
 	@Override
-	public void addFactory(final IInfoPackFactory factory)
+	public <T extends IInfoPackFactory>void addFactory(final T factory)
 	{
-		if(factory!=null&&packFactories.contains(factory)==false)
+		if(factory!=null && factories.contains(factory)==false)
 		{			
-			LOGGER.log(Level.FINE, "Adding factory: " + factory);
-			packFactories.add(factory);
+			factories.add(factory);
 		}
 	}
 
 	@Override
 	public void addSystem(final ISystem system)
 	{
-		if(system!=null&&systems.contains(system)==false)
-		{//If the system exists and is not already being tracked...
-			LOGGER.log(Level.FINE, "Adding system: " + system);
+		if(system!=null && systems.contains(system)==false)
+		{			
 			system.start();
 			systems.add(system);
 		}
 	}
-	
+
 	@Override
 	public void addSystem(final ISystem system, final boolean isCritical)
 	{
-		if(isCritical==true
-				&&system!=null
-				&&criticalSystems.contains(system)==false)
-		{
-			criticalSystems.add(system);
-		}
 		addSystem(system);
 	}
 	
-	/**
-	 * Adds a System to Core.
-	 * This is a convenience method.
-	 * @see Core#addSystem(ISystem)
-	 */
 	public void add(final ISystem system)
 	{
 		addSystem(system);
 	}
 	
-	/**
-	 * Adds a System to Core.
-	 * This is a convenience method.
-	 * @see Core#add(ISystem, boolean)
-	 */
-	public void add(final ISystem system, final boolean isCritical)
-	{
-		addSystem(system, isCritical);
-	}
-	
-	/**
-	 * Adds an Entity to Core.
-	 * This is a convenience method.
-	 * @see Core#add(IEntity)
-	 */
-	public void add(final IEntity entity)
-	{
-		addEntity(entity);
-	}
-	
-	/**
-	 * Adds an IInfoPackFactory to Core.
-	 * This is a convenience method.
-	 * @see Core#addFactory(IInfoPackFactory)
-	 */
 	public void add(final IInfoPackFactory factory)
 	{
 		addFactory(factory);
 	}
 	
-	/**
-	 * Adds an InfoPack to Core.
-	 * This is a convenience method.
-	 * @see Core#addInfoPack(IInfoPack)
-	 */
-	public void add(final IInfoPack infoPack)
+	public void add(final IEntity entity)
 	{
-		addInfoPack(infoPack);
+		addEntity(entity);
 	}
 	
-	@Override
-	public void removeEntity(final IEntity entity)
+	public void add(final IInfoPack pack)
 	{
-		LOGGER.log(Level.FINER, "Untracking entity: " + entity);
-		if(entity!=null)
-		{
-			entities.remove(entity);
-			infoPacks.remove(entity);
-		}
-	}
-	
-	@Override
-	public void removeEntity(final String id)
-	{
-		removeEntity(getEntityWithID(id));
-	}
-	
-	@Override
-	public void removeInfoPack(final IInfoPack infoPack)
-	{
-		if(infoPack!=null)
-		{
-			ArrayList<IInfoPack> entityPacks = 
-					infoPacks.get(infoPack.getOwner());
-			if(entityPacks!=null)
-			{
-				LOGGER.log(Level.FINEST, "Untracking infoPack " + infoPack 
-						+ "belonging to: " + infoPack.getOwner());
-				entityPacks.remove(infoPack);
-			}
-		}
+		addInfoPack(pack);
 	}
 
 	@Override
-	public void removeSystem(final ISystem system)
+	public IEntity getEntityWithID(final String id)
 	{
-		if(system!=null)
-		{
-			LOGGER.log(Level.FINE, "Untracking system: " + system);
-			system.stop();
-			systems.remove(system);
-			criticalSystems.remove(system);
-		}
+		return entitiesByID.get(id);
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	@Override
 	public <T extends IInfoPack> Iterator<T> getInfoPacksOfType(Class<T> t)
 	{
-		ArrayList<T> packs = new ArrayList<T>();
-		Set<IEntity> entitySet = infoPacks.keySet();
-
-		for(IEntity each:entitySet)
-		{//For each entity tracked...
-			//...get the packs the entity "owns"
-			ArrayList<IInfoPack> entityPacks = infoPacks.get(each);
-			
-			for(IInfoPack entityPack:entityPacks)
-			{//For each pack the entity owns....
-				if(entityPack.getClass()==t)
-				{//If it is an instance of the desired type, grab it.
-					packs.add((T)entityPack);
-				}
-			}
+		AbstractInfoPack head = infoPacks.get(t);
+		if(head!=null)
+		{
+			return head.iterator();			
 		}
-		return packs.iterator();
+		return (Iterator<T>) new AbstractInfoPackIterator(null);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public <T extends IInfoPack>T getInfoPackFrom(final IEntity entity, 
-													final Class<T> type)
+	public <T extends IInfoPack> T getInfoPackFrom(final IEntity entity, final Class<T> type)
 	{
-		ArrayList<IInfoPack> packs = infoPacks.get(entity);
-		if(packs!=null)
+		AbstractInfoPack head = entityPacks.get(entity);
+		if(head==null)
 		{
-			for(IInfoPack each:packs)
-			{
-				if(each.getClass()==type)
-				{
-					return (T)each;
-				}
-			}
+			return null;
 		}
-		return null;
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T extends ISystem> T getSystem(Class<T> t)
-	{
-		for(ISystem each:systems)
+		else if(head.getClass()==type)
 		{
-			if(each.getClass()==t)
-			{
-				return (T)each;
-			}
-		}
-		return null;
-	}
-	
-	@Override
-	public void work()
-	{
-		updateTimer();
-		for(IEntity each:entities)
-		{
-			if(each.hasChanged())
-			{
-				generateInfoPacks(each);
-			}
+			return (T)head;
 		}
 		
-		if(isPaused)
+		while(head.hasOwnerNext())
 		{
-			for(ISystem system:criticalSystems)
+			head = head.ownerNext();
+			if(head.getClass()==type)
 			{
-				long now = now();
-				if(isTime(now, system.getWait(), system.getLast()))
-				{
-					system.setLast(now);
-					system.work(now);
-				}
+				return (T)head;
 			}
 		}
-		else
-		{
-			for(ISystem system:systems)
-			{
-				long now = now();
+		return null;
+	}
 
-				if(isTime(now, system.getWait(), system.getLast()))
-				{
-					system.setLast(now);
-					system.work(now);
-				}
+	@Override
+	public <T extends IInfoPack> T getInfoPackFrom(String id, Class<T> type)
+	{
+		IEntity entity = entitiesByID.get(id);
+		return getInfoPackFrom(entity, type);
+	}
+
+	@Override
+	public <T extends ISystem> T getSystem(final Class<T> t)
+	{
+		Iterator<ISystem> sysIter = systems.iterator();
+		
+		while(sysIter.hasNext())
+		{
+			ISystem system = sysIter.next();
+			
+			if(system.getClass()==t)
+			{
+				return (T)system;
 			}
 		}
-
+		return null;
 	}
 	
 	@Override
@@ -359,99 +244,232 @@ public class Core implements ICore
 	{
 		if(entity!=null)
 		{
-			LOGGER.log(Level.FINEST, "Generating infoPacks for: " + entity);
-			infoPacks.remove(entity);
-			for(IInfoPackFactory each:packFactories)
+			LOGGER.log(Level.FINER, "Generated packs for (" + entity + ")"
+					+ " | " + entity.getName() +" (ID: " +  entity.getID() + ")");
+			removeAllInfoPacksFrom(entity);
+			for(IInfoPackFactory each:factories)
 			{
-				IInfoPack pack = each.generate(entity);
-				if(pack!=null&&pack.isDirty()==false)
-				{					
-					addInfoPack(pack);
-				}
-			}
-			entity.setChanged(false);
-		}
-	}
-	
-	/**
-	 * Sets the granularity of the debug messages that are printed.
-	 * @param debugLevel	the Level of messages that should be printed
-	 */
-	public void setDebugLevel(final Level debugLevel)
-	{
-		this.debugLevel = debugLevel;
-	}
-	
-	/**
-	 * Gets the current granularity of debug messages that are printed.
-	 * @return	the current logging Level of messages that are printed
-	 */
-	public Level getDebugLevel()
-	{
-		return this.debugLevel;
-	}
-
-	@Override
-	public void removeAllEntities()
-	{
-		this.infoPacks.clear();
-		this.entities.clear();
-	}
-
-	@Override
-	public <T extends IComponent> void removeEntitiesWith(Class<T> type)
-	{
-		Iterator<IEntity> iter = entities.iterator();
-		while(iter.hasNext())
-		{
-			IEntity each = iter.next();
-			if(each.getComponent(type)!=null)
-			{
-				iter.remove();
+				addInfoPack(each.generate(entity));
 			}
 		}
-	}
-
-	@Override
-	public void removeAllSystems()
-	{
-		this.systems.clear();
+		entity.setChanged(false);
 	}
 	
 	@Override
 	public String generateID()
 	{
-		lastID+=1;
-		return lastID+"";
+		this.lastID+=1;
+		return this.lastID+"";
 	}
 
 	@Override
-	public <T extends IInfoPack> T getInfoPackFrom(String id, Class<T> type)
+	public void removeEntity(final IEntity entity)
 	{
-		IEntity entity = getEntityWithID(id);
-		if(entity!=null)
-		{			
-			return getInfoPackFrom(entity, type);
+		
+		//Get the head.
+		AbstractInfoPack pack = entityPacks.get(entity);
+		
+		if(pack!=null)
+		{
+			do
+			{
+				removeInfoPack(pack);
+				pack = pack.ownerNext();
+			}while(pack!=null);
+			entitiesByID.remove(entity.getID());
 		}
-		return null;
 	}
 	
 	@Override
-	public IEntity getEntityWithID(final String id)
+	public void removeEntity(final String id)
 	{
-		//used by getInfoPackFrom(String, Class<T>)
-		Iterator<IEntity> iter = entities.iterator();
-		while(iter.hasNext())
-		{
-			IEntity each = iter.next();
-			if(each.getID().equals(id))
-			{
-				return each;
-			}
-		}
-		return null;
+		removeEntity(entitiesByID.get(id));
 	}
 
+	@Override
+	public void removeAllEntities()
+	{
+		entitiesByID.clear();
+		infoPacks.clear();
+		entityPacks.clear();
+	}
+
+	@Override
+	public <T extends IComponent> void removeEntitiesWith(final Class<T> type)
+	{
+		ArrayList<IEntity> entitiesWithPack = new ArrayList<IEntity>();
+		
+		AbstractInfoPack head = infoPacks.get(type);
+		
+		if(head==null)
+		{
+			return;
+		}
+		entitiesWithPack.add(head.getOwner());
+		while(head.hasNext())
+		{
+			head = head.next();
+			entitiesWithPack.add(head.getOwner());
+		}
+		
+		for(IEntity each:entitiesWithPack)
+		{
+			removeEntity(each);
+		}
+	}
+
+	private void removeInfoPack(final AbstractInfoPack pack)
+	{
+		if(pack!=null)
+		{
+			//Remove from list of packs of same type...
+			if(pack.hasPrev()==false)
+			{//If the pack is the head...
+				if(pack.hasNext())
+				{//Set the next pack, if any, to the head...
+					infoPacks.put(pack.getClass(), pack.next());
+					pack.next().setPrev(null);
+				}
+				else
+				{//Remove the pack since it is by itself
+					infoPacks.remove(pack.getClass());
+				}
+			}
+			else
+			{//Remove itself from the linked list.
+				pack.prev().setNext(pack.next());
+			}
+			
+			//Remove from list of packs of same entity
+			if(pack.hasOwnerPrev()==false)
+			{
+				if(pack.hasOwnerNext())
+				{//If this pack is the head...
+					//Set the next pack, if any, to the head.
+					entityPacks.put(pack.getOwner(), pack.ownerNext());
+					pack.ownerNext().setOwnerPrev(null);
+				}
+				else
+				{//Alone
+					entityPacks.remove(pack.getOwner());
+				}
+			}
+			else
+			{
+				System.out.println("Pack is not the head.");
+				pack.ownerPrev().setOwnerNext(pack.ownerNext());
+			}
+		}
+	}
+
+	private void removeAllInfoPacksFrom(final IEntity entity)
+	{
+		AbstractInfoPack pack = entityPacks.get(entity);
+		
+		if(pack==null)
+		{
+			return;
+		}
+		
+		while(pack.hasOwnerPrev())
+		{
+			pack = pack.ownerPrev();
+		}
+		
+		removeInfoPack(pack);
+		while(pack.hasNext())
+		{
+			pack = pack.next();
+			removeInfoPack(pack);
+		}
+		removeInfoPack(pack);
+		entity.setChanged(true);
+	}
+	@Override
+	public void removeSystem(final ISystem system)
+	{
+		systems.remove(system);
+	}
+
+	@Override
+	public void removeAllSystems()
+	{
+		systems.clear();
+	}
+
+	public void printPacks()
+	{
+		Set<IEntity> keys = entityPacks.keySet();
+		
+		int numForEntity = 0;
+		for(IEntity each:keys)
+		{
+			AbstractInfoPack pack = entityPacks.get(each);
+			if(pack!=null)
+			{
+				numForEntity++;
+			}
+			while(pack.hasOwnerNext())
+			{
+				pack = pack.ownerNext();
+				numForEntity++;
+			}
+			System.out.println("NOW HAS: " + numForEntity + " for " + each);
+	
+			numForEntity = 0;
+		}
+		
+		Set<Class<? extends AbstractInfoPack>> keys2 = infoPacks.keySet();
+		
+		int numForType = 0;
+		
+		for(Class<? extends AbstractInfoPack> each:keys2)
+		{
+			AbstractInfoPack pack = infoPacks.get(each);
+			if(pack!=null)
+			{
+				numForType++;
+			}
+			while(pack.hasNext())
+			{
+				pack = pack.next();
+				numForType++;
+			}
+			System.out.println("NOW HAS: " + numForType + " of " + each);
+			numForType = 0;
+		}
+	}
+
+	@Override
+	public void work()
+	{
+		Iterator<ISystem> sysIter = systems.iterator();
+		updateTimer();
+		long now = now();
+		
+		Collection<IEntity> entities = entitiesByID.values();
+		
+		for(IEntity each:entities)
+		{
+			if(each.hasChanged())
+			{
+				generateInfoPacks(each);
+				each.setChanged(false);
+			}
+		}
+		
+		while(sysIter.hasNext())
+		{
+			ISystem system = sysIter.next();
+			if(now-system.getLast()>system.getWait())
+			{	
+				system.setLast(now);
+				system.work(now);
+			}
+		}
+	}
+
+	
 	//////////
 	// UTILITY
 	//////////
@@ -519,7 +537,6 @@ public class Core implements ICore
 	 */
 	public void send(final String id, final String... message)
 	{
-		LOGGER.log(Level.FINER, "Sending: " + id + " | " + message);
 		if(subscribers.containsKey(id))
 		{
 			Iterator<ISystem> systems = subscribers.get(id).iterator();
@@ -537,8 +554,6 @@ public class Core implements ICore
 	 */
 	public void setInterested(final ISystem system, final String messageID)
 	{
-		LOGGER.log(Level.FINE, system + " interested in: " + messageID);
-
 		if(system!=null&&messageID!=null)
 		{		
 			if(subscribers.containsKey(messageID))
@@ -567,7 +582,6 @@ public class Core implements ICore
 	 */
 	public void setUninterested(final ISystem system, final String messageID)
 	{
-		LOGGER.log(Level.FINE, system + " uninterested in: " + messageID);
 		if(system!=null&&messageID!=null)
 		{
 			if(subscribers.containsKey(messageID))

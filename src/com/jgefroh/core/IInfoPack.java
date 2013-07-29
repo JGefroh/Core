@@ -46,6 +46,16 @@ public interface IInfoPack
 	 * 			{@code false} otherwise
 	 * @since 	0.1.0
 	 */
+	public boolean checkDirty();
+	
+	/**
+	 * Returns the flag that indicates this {@code InfoPack} is invalid.
+	 * 
+	 * Validity is determined by whether the {@code Entity} has the
+	 * {@code components} this {@code InfoPack} requires.
+	 * @return	{@code true} if this {@code InfoPack} is unreliable;
+	 * 			{@code false} otherwise
+	 */
 	public boolean isDirty();
 	
 	
