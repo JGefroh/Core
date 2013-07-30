@@ -49,7 +49,7 @@ public class Core implements ICore
 	private long timeLastChecked;
 	
 	/**FLAG: Indicates whether Core should pause execution or not.*/
-	private boolean isPaused;
+	private boolean isPaused;	//TODO: Implement
 	
 	/**Logger for debug purposes.*/
 	private final Logger LOGGER 
@@ -73,15 +73,15 @@ public class Core implements ICore
 	public void addEntity(final IEntity entity)
 	{
 		if(entity!=null&&entitiesByID.get(entity)==null)
-		{
+		{//If the entity is not already tracked...
 			if(entity.getID()==null)
-			{
+			{//If the entity does not have an ID...
 				entity.setID(generateID());
 			}
 			entitiesByID.put(entity.getID(), entity);
 			LOGGER.log(Level.FINER, "Added entity (" + entity + ")"
 					+ " | " + entity.getName() +" (ID: " +  entity.getID() + ")");
-			generateInfoPacks(entity);
+			generateInfoPacks(entity); //Generate info packs for this entity.
 		}
 	}
 
@@ -97,6 +97,7 @@ public class Core implements ICore
 			if(head!=null)
 			{//There is already an info pack of this type...
 				AbstractInfoPack nextPack = head;
+				
 				while(nextPack!=null)
 				{//Check to see if the info pack already exists.
 					if(nextPack==addMe)
@@ -105,13 +106,13 @@ public class Core implements ICore
 					}
 					nextPack = nextPack.next();
 				}
-				addMe.setNext(head);
-				head.setPrev(addMe);
-				infoPacks.put(addMe.getClass(), addMe);
+				addMe.setNext(head);	//Set the old head as next of new pack
+				head.setPrev(addMe);	//Set the new pack as previous of old.
+				infoPacks.put(addMe.getClass(), addMe); //Set new pack as head
 			}
 			else
 			{//There is no info pack of this type already.
-				infoPacks.put(addMe.getClass(), addMe);
+				infoPacks.put(addMe.getClass(), addMe);	//Set new pack as head
 			}
 			
 			
@@ -154,21 +155,37 @@ public class Core implements ICore
 		addSystem(system);
 	}
 	
+	/**
+	 * Convenience method.
+	 * @param system	the system to add
+	 */
 	public void add(final ISystem system)
 	{
 		addSystem(system);
 	}
-	
+
+	/**
+	 * Convenience method.
+	 * @param factory	the factory to add
+	 */
 	public void add(final IInfoPackFactory factory)
 	{
 		addFactory(factory);
 	}
-	
+
+	/**
+	 * Convenience method.
+	 * @param entity	the entity to add
+	 */
 	public void add(final IEntity entity)
 	{
 		addEntity(entity);
 	}
-	
+
+	/**
+	 * Convenience method.
+	 * @param pack	the InfoPack to add
+	 */
 	public void add(final IInfoPack pack)
 	{
 		addInfoPack(pack);
@@ -194,23 +211,16 @@ public class Core implements ICore
 	@Override
 	public <T extends IInfoPack> T getInfoPackFrom(final IEntity entity, final Class<T> type)
 	{
+		//Get the first InfoPack belonging to the entity, if any.
 		AbstractInfoPack head = entityPacks.get(entity);
-		if(head==null)
-		{
-			return null;
-		}
-		else if(head.getClass()==type)
-		{
-			return (T)head;
-		}
 		
-		while(head.hasOwnerNext())
-		{
-			head = head.ownerNext();
+		while(head!=null)
+		{//While there are nodes to search..
 			if(head.getClass()==type)
-			{
+			{//If found, return
 				return (T)head;
 			}
+			head = head.ownerNext();
 		}
 		return null;
 	}
@@ -247,8 +257,10 @@ public class Core implements ICore
 			LOGGER.log(Level.FINER, "Generated packs for (" + entity + ")"
 					+ " | " + entity.getName() +" (ID: " +  entity.getID() + ")");
 			removeAllInfoPacksFrom(entity);
+			AbstractInfoPack pack = entityPacks.get(entity);
+
 			for(IInfoPackFactory each:factories)
-			{
+			{//For each type of factory...
 				addInfoPack(each.generate(entity));
 			}
 		}
@@ -265,19 +277,20 @@ public class Core implements ICore
 	@Override
 	public void removeEntity(final IEntity entity)
 	{
-		
-		//Get the head.
-		AbstractInfoPack pack = entityPacks.get(entity);
-		
-		if(pack!=null)
+		if(entity==null)
 		{
-			do
-			{
-				removeInfoPack(pack);
-				pack = pack.ownerNext();
-			}while(pack!=null);
-			entitiesByID.remove(entity.getID());
+			return;
 		}
+		
+		//Get the packs that belong to the entity.
+		AbstractInfoPack pack = entityPacks.get(entity);
+		while(pack!=null)
+		{//While the entity still has packs...
+			removeInfoPack(pack);
+			pack = pack.ownerNext();
+		}
+		entity.removeAllComponents();	//This shouldn't be necessary.
+		entitiesByID.remove(entity.getID());
 	}
 	
 	@Override
@@ -297,27 +310,21 @@ public class Core implements ICore
 	@Override
 	public <T extends IComponent> void removeEntitiesWith(final Class<T> type)
 	{
-		ArrayList<IEntity> entitiesWithPack = new ArrayList<IEntity>();
+		Collection<IEntity> entitiesWithComponent = entitiesByID.values();
 		
-		AbstractInfoPack head = infoPacks.get(type);
-		
-		if(head==null)
+		for(IEntity each:entitiesWithComponent)
 		{
-			return;
-		}
-		entitiesWithPack.add(head.getOwner());
-		while(head.hasNext())
-		{
-			head = head.next();
-			entitiesWithPack.add(head.getOwner());
-		}
-		
-		for(IEntity each:entitiesWithPack)
-		{
-			removeEntity(each);
+			if(each.getComponent(type)!=null)
+			{				
+				removeEntity(each);	//May cause concurrent modification issues.
+			}
 		}
 	}
 
+	/**
+	 * Stops tracking the info pack.
+	 * @param pack	the InfoPack to stop tracking
+	 */
 	private void removeInfoPack(final AbstractInfoPack pack)
 	{
 		if(pack!=null)
@@ -337,7 +344,11 @@ public class Core implements ICore
 			}
 			else
 			{//Remove itself from the linked list.
-				pack.prev().setNext(pack.next());
+				pack.prev().setNext(pack.next());	//Remove self from previous
+				if(pack.hasNext())
+				{
+					pack.next().setPrev(pack.prev());	//Remove self from next
+				}
 			}
 			
 			//Remove from list of packs of same entity
@@ -356,33 +367,36 @@ public class Core implements ICore
 			}
 			else
 			{
-				System.out.println("Pack is not the head.");
-				pack.ownerPrev().setOwnerNext(pack.ownerNext());
+				pack.ownerPrev().setOwnerNext(pack.ownerNext()); //Remove self from previous
+				if(pack.hasOwnerNext())
+				{//Remove self from next
+					pack.ownerNext().setOwnerPrev(pack.ownerPrev());
+				}
 			}
+			pack.setDirty(true);
+			pack.getOwner().setChanged(true);
 		}
 	}
 
+	/**
+	 * Removes all InfoPacks associated with a specific entity.
+	 * @param entity
+	 */
 	private void removeAllInfoPacksFrom(final IEntity entity)
 	{
 		AbstractInfoPack pack = entityPacks.get(entity);
 		
-		if(pack==null)
+
+		while(pack!=null&&pack.hasOwnerPrev())
 		{
-			return;
+			pack = pack.ownerPrev();	//This should never enter the loop.
 		}
 		
-		while(pack.hasOwnerPrev())
+		while(pack!=null)
 		{
-			pack = pack.ownerPrev();
-		}
-		
-		removeInfoPack(pack);
-		while(pack.hasNext())
-		{
-			pack = pack.next();
 			removeInfoPack(pack);
+			pack = pack.ownerNext();
 		}
-		removeInfoPack(pack);
 		entity.setChanged(true);
 	}
 	@Override
@@ -395,49 +409,6 @@ public class Core implements ICore
 	public void removeAllSystems()
 	{
 		systems.clear();
-	}
-
-	public void printPacks()
-	{
-		Set<IEntity> keys = entityPacks.keySet();
-		
-		int numForEntity = 0;
-		for(IEntity each:keys)
-		{
-			AbstractInfoPack pack = entityPacks.get(each);
-			if(pack!=null)
-			{
-				numForEntity++;
-			}
-			while(pack.hasOwnerNext())
-			{
-				pack = pack.ownerNext();
-				numForEntity++;
-			}
-			System.out.println("NOW HAS: " + numForEntity + " for " + each);
-	
-			numForEntity = 0;
-		}
-		
-		Set<Class<? extends AbstractInfoPack>> keys2 = infoPacks.keySet();
-		
-		int numForType = 0;
-		
-		for(Class<? extends AbstractInfoPack> each:keys2)
-		{
-			AbstractInfoPack pack = infoPacks.get(each);
-			if(pack!=null)
-			{
-				numForType++;
-			}
-			while(pack.hasNext())
-			{
-				pack = pack.next();
-				numForType++;
-			}
-			System.out.println("NOW HAS: " + numForType + " of " + each);
-			numForType = 0;
-		}
 	}
 
 	@Override
