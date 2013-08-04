@@ -40,28 +40,20 @@ public abstract class AbstractSystem implements ISystem
 	// ISYSTEM INTERFACE
 	/////////
 	@Override
-	public void init()
-	{
-		LOGGER.log(Level.FINE, "Setting system values to default.");
-		isRunning = true;		
-	}
+	public abstract void init();
 	
 	@Override
 	public void start()
 	{
-		LOGGER.log(Level.INFO, "System started.");
 		isRunning = true;
 	}
 
 	@Override
-	public void work(final long now)
-	{
-	}
+	public abstract void work(final long now);
 
 	@Override
 	public void stop()
 	{
-		LOGGER.log(Level.INFO, "System stopped.");
 		isRunning = false;
 	}
 	
@@ -81,7 +73,6 @@ public abstract class AbstractSystem implements ISystem
 	public void setWait(final long waitTime)
 	{
 		this.waitTime = waitTime;
-		LOGGER.log(Level.FINE, "Wait interval set to: " + waitTime + " ms");
 	}
 	
 	@Override
@@ -91,10 +82,7 @@ public abstract class AbstractSystem implements ISystem
 	}
 	
 	@Override
-	public void recv(final String id, final String... message)
-	{
-		LOGGER.log(Level.FINEST, "Received message: " + id);
-	}
+	public abstract void recv(final String id, final String... message);
 	/////////
 	// SYSTEM METHODS
 	/////////
