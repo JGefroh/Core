@@ -9,15 +9,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
-
 /**
  * An implementation of the {@code ICore} interface using nodes.
  * 
  * @author 	Joseph Gefroh
  * @see		ICore
- * @version 0.1.0
- * @since 27JUL13
+ * @see		AbstractInfoPack
+ * @see		AbstractSystem
+ * @version 0.2.0
+ * @since 04AUG13
  */
 public class Core implements ICore
 {
@@ -28,7 +28,7 @@ public class Core implements ICore
 	private HashMap<IEntity, AbstractInfoPack> entityPacks;
 	
 	/**Holds the factories that generate the InfoPacks.*/
-	private ArrayList<IInfoPackFactory> factories;
+	private ArrayList<IInfoPack> factories;
 	
 	/**Holds the systems.*/
 	private ArrayList<ISystem> systems;
@@ -53,22 +53,23 @@ public class Core implements ICore
 	
 	/**Logger for debug purposes.*/
 	private final Logger LOGGER 
-		= LoggerFactory.getLogger(this.getClass(), Level.OFF);
+		= LoggerFactory.getLogger(this.getClass(), Level.ALL);
 	
 	/**The level of detail in debug messages.*/
-	private Level debugLevel = Level.ALL;
+	private Level debugLevel = Level.OFF;
 	
 	public Core()
 	{
 		infoPacks = new HashMap<Class<? extends AbstractInfoPack>, AbstractInfoPack>();
 		entityPacks = new HashMap<IEntity, AbstractInfoPack>();
-		factories = new ArrayList<IInfoPackFactory>();
+		factories = new ArrayList<IInfoPack>();
 		systems = new ArrayList<ISystem>();
 		entitiesByID = new HashMap<String, IEntity>();
 		subscribers = new HashMap<String, ArrayList<ISystem>>();
 		this.timeLastChecked = System.nanoTime();
+		setDebugLevel(debugLevel);
 	}
-	
+
 	@Override
 	public void addEntity(final IEntity entity)
 	{
@@ -131,7 +132,7 @@ public class Core implements ICore
 	}
 	
 	@Override
-	public <T extends IInfoPackFactory>void addFactory(final T factory)
+	public <T extends IInfoPack>void addFactory(final T factory)
 	{
 		if(factory!=null && factories.contains(factory)==false)
 		{			
@@ -144,8 +145,9 @@ public class Core implements ICore
 	{
 		if(system!=null && systems.contains(system)==false)
 		{			
-			system.start();
 			systems.add(system);
+			system.start();
+			LOGGER.log(Level.INFO, "Started system: " + system.getClass().getSimpleName());
 		}
 	}
 
@@ -162,15 +164,6 @@ public class Core implements ICore
 	public void add(final ISystem system)
 	{
 		addSystem(system);
-	}
-
-	/**
-	 * Convenience method.
-	 * @param factory	the factory to add
-	 */
-	public void add(final IInfoPackFactory factory)
-	{
-		addFactory(factory);
 	}
 
 	/**
@@ -259,7 +252,7 @@ public class Core implements ICore
 			removeAllInfoPacksFrom(entity);
 			AbstractInfoPack pack = entityPacks.get(entity);
 
-			for(IInfoPackFactory each:factories)
+			for(IInfoPack each:factories)
 			{//For each type of factory...
 				addInfoPack(each.generate(entity));
 			}
@@ -432,7 +425,8 @@ public class Core implements ICore
 		while(sysIter.hasNext())
 		{
 			ISystem system = sysIter.next();
-			if(now-system.getLast()>system.getWait())
+			if(system.isRunning()
+					&&now-system.getLast()>system.getWait())
 			{	
 				system.setLast(now);
 				system.work(now);
@@ -527,6 +521,8 @@ public class Core implements ICore
 	{
 		if(system!=null&&messageID!=null)
 		{		
+			LOGGER.log(Level.CONFIG, system.getClass().getSimpleName() + " interested in: " + messageID);
+
 			if(subscribers.containsKey(messageID))
 			{//If another system has already expressed interest in the message
 				ArrayList<ISystem> systems = subscribers.get(messageID);
@@ -553,13 +549,25 @@ public class Core implements ICore
 	 */
 	public void setUninterested(final ISystem system, final String messageID)
 	{
+
 		if(system!=null&&messageID!=null)
 		{
+			LOGGER.log(Level.CONFIG, system.getClass().getSimpleName() + " UNinterested in: " + messageID);
 			if(subscribers.containsKey(messageID))
 			{
 				ArrayList<ISystem> systems = subscribers.get(messageID);
 				systems.remove(system);
 			}
 		}
+	}
+	
+	/**
+	 * Sets the debug level of Core.
+	 * @param level	the Level to set
+	 */
+	public void setDebugLevel(final Level level)
+	{
+		LOGGER.log(Level.ALL, "Debug level set to: " + level);
+		this.LOGGER.setLevel(level);
 	}
 }

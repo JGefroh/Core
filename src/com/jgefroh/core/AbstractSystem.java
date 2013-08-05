@@ -7,8 +7,10 @@ import java.util.logging.Logger;
 
 
 /**
- * System that implements defaults.
+ * An abstract system that provides basic functionality.
  * 
+ * 
+ * <p>Extend this {@code System} to make it easier to write {@code Systems}.</p>
  * 
  * @author Joseph Gefroh
  */
@@ -19,7 +21,6 @@ public abstract class AbstractSystem implements ISystem
 	//////////
 	
 	/**Flag that shows whether the system is running or not.*/
-	@SuppressWarnings("unused")
 	private boolean isRunning;
 	
 	/**The time to wait between executions of the system.*/
@@ -27,20 +28,14 @@ public abstract class AbstractSystem implements ISystem
 	
 	/**The time this System was last executed, in ms.*/
 	private long last;
-	
-	/**The level of detail in debug messages.*/
-	private Level debugLevel = Level.INFO;
-	
-	/**Logger for debug purposes.*/
-	private final Logger LOGGER 
-		= LoggerFactory.getLogger(this.getClass(), Level.ALL);
-
 
 	/////////
 	// ISYSTEM INTERFACE
 	/////////
 	@Override
-	public abstract void init();
+	public void init()
+	{
+	}
 	
 	@Override
 	public void start()
@@ -49,7 +44,9 @@ public abstract class AbstractSystem implements ISystem
 	}
 
 	@Override
-	public abstract void work(final long now);
+	public void work(final long now)
+	{
+	}
 
 	@Override
 	public void stop()
@@ -82,17 +79,18 @@ public abstract class AbstractSystem implements ISystem
 	}
 	
 	@Override
-	public abstract void recv(final String id, final String... message);
+	public void recv(final String id, final String... message)
+	{
+		
+	}
+
+	@Override
+	public boolean isRunning()
+	{
+		return this.isRunning;
+	}
+	
 	/////////
 	// SYSTEM METHODS
 	/////////
-	
-	/**
-	 * Sets the debug level of this {@code System}.
-	 * @param level	the Level to set
-	 */
-	public void setDebugLevel(final Level level)
-	{
-		this.LOGGER.setLevel(level);
-	}
 }

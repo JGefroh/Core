@@ -15,14 +15,13 @@ package com.jgefroh.core;
  * {@code Entity} through its presence or lack of presence.
  * </p>
  * <p>
- * {@code Core} automatically calls a method to generate an {@code InfoPack} 
- * within its accompanying {@code IInfoPackFactory}.
+ * {@code Core} automatically calls the generate(entity) method to generate an 
+ * {@code InfoPack}.
  * </p>
  * 
  * @author 	Joseph Gefroh
  * @see		Core
  * @see		IComponent
- * @see		IInfoPackFactory
  * @see		ISystem
  * @version	0.1.0
  * @since 	0.1.0
@@ -66,4 +65,13 @@ public interface IInfoPack
 	 * @since 0.1.0
 	 */
 	public void setDirty(final boolean isDirty);
+	
+	
+	/**
+	 * Creates a new instance of this {@code InfoPack} if the passed
+	 * {@code Entity} has the proper components.
+	 * @param entity
+	 * @return the instance of this {@code InfoPack}
+	 */
+	public IInfoPack generate(final IEntity entity);
 }

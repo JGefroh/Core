@@ -77,4 +77,10 @@ public interface ISystem
 	 * @param message	the message to send
 	 */
 	public void recv(final String id, final String... message);
+	
+	/**
+	 * Gets the flag that indicates this system is running.
+	 * @return	true if this system is running; false otherwise
+	 */
+	public boolean isRunning();
 }

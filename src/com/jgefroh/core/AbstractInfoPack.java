@@ -3,13 +3,14 @@ package com.jgefroh.core;
 import java.util.Iterator;
 
 /**
- * An implementation of an InfoPack as a node.
+ * A base InfoPack class that acts as a node, for use with the provided
+ * implementation of Core.
+ * 
+ * 
+ * <p>Extend this to create new InfoPack types.</p>
  */
 public abstract class AbstractInfoPack implements IInfoPack, Iterable<AbstractInfoPack>
 {
-	/**The owner of this InfoPack.*/
-	private IEntity owner;
-	
 	/**The next info pack of this type.*/
 	private AbstractInfoPack next;
 
@@ -26,12 +27,6 @@ public abstract class AbstractInfoPack implements IInfoPack, Iterable<AbstractIn
 	private boolean isDirty;
 	
 	private boolean onHead;
-	
-	@Override
-	public IEntity getOwner()
-	{
-		return this.owner;
-	}
 
 	public abstract boolean checkDirty();
 
@@ -178,4 +173,7 @@ public abstract class AbstractInfoPack implements IInfoPack, Iterable<AbstractIn
 		}
 		return new AbstractInfoPackIterator(head);
 	}
+
+	@Override
+	public abstract IInfoPack generate(final IEntity entity);
 }

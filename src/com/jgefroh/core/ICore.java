@@ -10,7 +10,7 @@ import java.util.Iterator;
  * </p>
  * <p>
  * {@code Core} keeps track of all {@code Entities}, {@code InfoPacks},
- * {@code InfoPackFactories}, and {@code Systems}.
+ * and {@code Systems}.
  * </p>
  * <p>
  * It monitors {@code Entities} for changes in their composition of 
@@ -50,11 +50,11 @@ public interface ICore
 	public <T extends IInfoPack> void addInfoPack(final T infoPack);
 	
 	/**
-	 * Starts using the passed {@code InfoPackFactory} to generate 
+	 * Starts using the passed {@code InfoPack} to generate 
 	 * {@code infoPacks}.
-	 * @param factory	the InfoPackFactory that generates InfoPacks
+	 * @param factory	the InfoPack to use to generate more of that type
 	 */
-	public <T extends IInfoPackFactory> void addFactory(final T factory);
+	public <T extends IInfoPack> void addFactory(final T factory);
 		
 	/**
 	 * Starts tracking the passed {@code System} as a non-critical system.

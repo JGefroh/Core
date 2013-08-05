@@ -1,7 +1,6 @@
 /**
  * The essential classes and interfaces of the Core framework.
  * @author Joseph Gefroh
- * @version 0.4.0
- * @since	31MAY13
+ * @version 0.6.0
  */
 package com.jgefroh.core;
