@@ -11,8 +11,6 @@ package com.jgefroh.core;
  * 
  * @author 	Joseph Gefroh
  * @see		IComponent
- * @version 0.3.0
- * @since	0.1.0
  */
 public interface IEntity
 {
@@ -57,7 +55,8 @@ public interface IEntity
 	
 	/**
 	 * Checks the flag that indicates whether this {@code Entity}'s
-	 * {@code Component} composition has changed.
+	 * {@code Component} composition has changed. This should be called
+	 * by any Entity method that changes the component structure. 
 	 * @return	{@code true} if there was a change; {@code false} otherwise
 	 */
 	public boolean hasChanged();

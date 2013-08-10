@@ -4,6 +4,9 @@ import com.jgefroh.core.IComponent;
 import com.jgefroh.core.IEntity;
 
 /**
+ * A base implementation of IComponent for convenience.
+ * 
+ * 
  * @author Joseph Gefroh
  */
 public abstract class AbstractComponent implements IComponent

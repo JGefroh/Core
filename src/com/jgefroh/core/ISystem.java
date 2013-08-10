@@ -1,5 +1,7 @@
 package com.jgefroh.core;
 
+import java.util.HashMap;
+
 /**
  * The interface for a {@code System}.
  * 
@@ -16,10 +18,12 @@ package com.jgefroh.core;
  * of {@code Systems}.
  * </p>
  * 
+ * <p>
+ * {@code Core} calls several of these methods automatically as part of its
+ * operations.
+ * </p>
  * @author 	Joseph Gefroh
  * @see		IInfoPack
- * @version 0.1.0
- * @since	0.1.0
  */
 public interface ISystem
 {
@@ -77,6 +81,12 @@ public interface ISystem
 	 * @param message	the message to send
 	 */
 	public void recv(final String id, final String... message);
+	
+	/**
+	 * Sends a message to this {@code System}.
+	 * @param message	the values sent with this message
+	 */
+	public void recv(final String id, final HashMap<String, String> map);
 	
 	/**
 	 * Gets the flag that indicates this system is running.

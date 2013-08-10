@@ -4,7 +4,13 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * An implementation of an InfoPack as a node.
+ * An iterator that allows for AbstractInfoPack nodes to be traversed according
+ * to their same type.
+ * 
+ * 
+ * Note that this Iterator will rewind to the head of any linked list.
+ * Make sure there are no cycles or it will rewind forever.
+ * @author Joseph Gefroh
  */
 public class AbstractInfoPackIterator implements Iterator<AbstractInfoPack>
 {
@@ -15,6 +21,13 @@ public class AbstractInfoPackIterator implements Iterator<AbstractInfoPack>
 	public AbstractInfoPackIterator(final AbstractInfoPack head)
 	{
 		this.head = head;
+		if(head!=null)
+		{
+			while(head.hasPrev())
+			{
+				this.head = head.prev();
+			}
+		}
 	}
 	@Override
 	public boolean hasNext()

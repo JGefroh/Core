@@ -27,11 +27,8 @@ import java.util.Iterator;
  * @author 	Joseph Gefroh
  * @see 	IEntity
  * @see		IInfoPack
- * @see		IInfoPackFactory
  * @see		ISystem
  * @see		IEntity
- * @version 0.5.0
- * @since	0.1.0
  */
 public interface ICore
 {
@@ -42,12 +39,6 @@ public interface ICore
 	 * @param entity	the Entity to begin tracking
 	 */
 	public <T extends IEntity> void addEntity(final T entity);
-	
-	/**
-	 * Starts tracking the passed {@code InfoPack}.
-	 * @param infoPack	the InfoPack to start tracking
-	 */
-	public <T extends IInfoPack> void addInfoPack(final T infoPack);
 	
 	/**
 	 * Starts using the passed {@code InfoPack} to generate 

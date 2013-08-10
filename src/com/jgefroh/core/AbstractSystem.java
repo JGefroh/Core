@@ -1,9 +1,7 @@
 package com.jgefroh.core;
 
 
-import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.HashMap;
 
 
 /**
@@ -16,6 +14,7 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractSystem implements ISystem
 {
+
 	//////////
 	// DATA
 	//////////
@@ -28,6 +27,7 @@ public abstract class AbstractSystem implements ISystem
 	
 	/**The time this System was last executed, in ms.*/
 	private long last;
+
 
 	/////////
 	// ISYSTEM INTERFACE
@@ -83,7 +83,12 @@ public abstract class AbstractSystem implements ISystem
 	{
 		
 	}
-
+	
+	@Override
+	public void recv(final String id, final HashMap<String, String> map)
+	{	
+	}
+	
 	@Override
 	public boolean isRunning()
 	{

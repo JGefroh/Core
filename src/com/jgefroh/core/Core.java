@@ -5,19 +5,28 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * An implementation of the {@code ICore} interface using nodes.
  * 
+ * 
+ * <p>
+ * It also provides timing methods and very basic message passing for
+ * inter-system communication.
+ * </p>
+ * 
+ * <p>
+ * This implementation relies heavily on AbstractInfoPack and AbstractSystem.
+ * Custom Systems and InfoPacks used with this {code Core} should extend these 
+ * abstract classes instead of implementing the IInfoPack and ISystem interfaces.
+ * </p>
+ * 
  * @author 	Joseph Gefroh
  * @see		ICore
  * @see		AbstractInfoPack
  * @see		AbstractSystem
- * @version 0.2.0
- * @since 04AUG13
  */
 public class Core implements ICore
 {
@@ -51,12 +60,14 @@ public class Core implements ICore
 	/**FLAG: Indicates whether Core should pause execution or not.*/
 	private boolean isPaused;	//TODO: Implement
 	
+	/**The level of detail in debug messages.*/
+	private Level debugLevel = Level.INFO;
+	
 	/**Logger for debug purposes.*/
 	private final Logger LOGGER 
-		= LoggerFactory.getLogger(this.getClass(), Level.ALL);
+		= LoggerFactory.getLogger(this.getClass(), debugLevel);
 	
-	/**The level of detail in debug messages.*/
-	private Level debugLevel = Level.OFF;
+
 	
 	public Core()
 	{
@@ -67,88 +78,128 @@ public class Core implements ICore
 		entitiesByID = new HashMap<String, IEntity>();
 		subscribers = new HashMap<String, ArrayList<ISystem>>();
 		this.timeLastChecked = System.nanoTime();
-		setDebugLevel(debugLevel);
+		LOGGER.log(Level.INFO, "Core initialized.");
 	}
 
 	@Override
 	public void addEntity(final IEntity entity)
 	{
-		if(entity!=null&&entitiesByID.get(entity)==null)
-		{//If the entity is not already tracked...
-			if(entity.getID()==null)
-			{//If the entity does not have an ID...
-				entity.setID(generateID());
-			}
-			entitiesByID.put(entity.getID(), entity);
-			LOGGER.log(Level.FINER, "Added entity (" + entity + ")"
-					+ " | " + entity.getName() +" (ID: " +  entity.getID() + ")");
-			generateInfoPacks(entity); //Generate info packs for this entity.
+		if(entity==null)
+		{//Passed entity does not exist. Throw or skip?
+			LOGGER.log(Level.FINE, "Can't add null entity, skipping.");
+			return;
 		}
+		else if(entitiesByID.get(entity.getID())!=null)
+		{//Passed entity is already being tracked (if IDs are unique)
+			LOGGER.log(Level.WARNING, "Entity (" + entity.getName()+ " | ID: " 
+						+ entity.getID() + ") is already tracked, skipping.");
+			return;
+		}
+		
+		if(entity.getID()==null)
+		{//If the entity does not have an ID...
+			entity.setID(generateID());
+		}
+		
+		entitiesByID.put(entity.getID(), entity);
+		LOGGER.log(Level.FINE, "Entity (" + entity.getName()+ " | ID: " 
+				+ entity.getID() + ") added.");
+		generateInfoPacks(entity); //Generate info packs for this entity.
 	}
 
-	@Override
-	public <T extends IInfoPack> void addInfoPack(final T newPack)
+	private <T extends IInfoPack> void addInfoPack(final T newPack)
 	{
+		if(newPack==null)
+		{
+			LOGGER.log(Level.WARNING, "Can't add null InfoPack; skipping.");
+			return;
+		}
+		else if(newPack.checkDirty()==true)
+		{
+			LOGGER.log(Level.WARNING, "Can't add dirty InfoPack (" + newPack 
+										+ "); skipping.");
+			return;
+		}
 		AbstractInfoPack addMe = (AbstractInfoPack)newPack;
 
-		if(addMe!=null&&addMe.checkDirty()==false)
-		{
-			AbstractInfoPack head = infoPacks.get(addMe.getClass());
+		AbstractInfoPack head = infoPacks.get(addMe.getClass());
+
+		
+		
+		if(head!=null)
+		{//There is already an info pack of this type...
+			AbstractInfoPack nextPack = head;
 			
-			if(head!=null)
-			{//There is already an info pack of this type...
-				AbstractInfoPack nextPack = head;
-				
-				while(nextPack!=null)
-				{//Check to see if the info pack already exists.
-					if(nextPack==addMe)
-					{
-						return;	//Found same copy, do nothing.
-					}
-					nextPack = nextPack.next();
+			while(nextPack!=null)
+			{//Check to see if the info pack already exists.
+				if(nextPack==addMe)
+				{
+					return;	//Found same copy, do nothing.
 				}
-				addMe.setNext(head);	//Set the old head as next of new pack
-				head.setPrev(addMe);	//Set the new pack as previous of old.
-				infoPacks.put(addMe.getClass(), addMe); //Set new pack as head
+				nextPack = nextPack.next();
 			}
-			else
-			{//There is no info pack of this type already.
-				infoPacks.put(addMe.getClass(), addMe);	//Set new pack as head
-			}
-			
-			
-			AbstractInfoPack ptrPack = entityPacks.get(addMe.getOwner());
-			if(ptrPack==null)
-			{//This is the first info pack the owner has
-				entityPacks.put(addMe.getOwner(), addMe);
-			}
-			else
-			{//The owner of the info pack has other info packs...
-				addMe.setOwnerNext(ptrPack);
-				ptrPack.setOwnerPrev(addMe);
-				entityPacks.put(addMe.getOwner(),  addMe);
-			}
+			addMe.setNext(head);	//Set the old head as next of new pack
+			head.setPrev(addMe);	//Set the new pack as previous of old.
+			infoPacks.put(addMe.getClass(), addMe); //Set new pack as head
+		}
+		else
+		{//There is no info pack of this type already.
+			infoPacks.put(addMe.getClass(), addMe);	//Set new pack as head
+		}
+		
+		
+		AbstractInfoPack ptrPack = entityPacks.get(addMe.getOwner());
+		if(ptrPack==null)
+		{//This is the first info pack the owner has
+			entityPacks.put(addMe.getOwner(), addMe);
+		}
+		else
+		{//The owner of the info pack has other info packs...
+			addMe.setOwnerNext(ptrPack);
+			ptrPack.setOwnerPrev(addMe);
+			entityPacks.put(addMe.getOwner(),  addMe);
 		}
 	}
 	
 	@Override
 	public <T extends IInfoPack>void addFactory(final T factory)
 	{
-		if(factory!=null && factories.contains(factory)==false)
-		{			
-			factories.add(factory);
+		if(factory==null)
+		{
+			LOGGER.log(Level.WARNING, "Can't add null factory; skipping.");
+			return;
 		}
+		else if(factories.contains(factory)==true)
+		{
+			LOGGER.log(Level.WARNING, "Factory " + factory + " is already being" +
+										" used; skipping.");
+			return;
+		}		
+		
+		factories.add(factory);
+		LOGGER.log(Level.FINE, "Factory " + factory + " added.");
 	}
 
 	@Override
 	public void addSystem(final ISystem system)
 	{
-		if(system!=null && systems.contains(system)==false)
+		if(system==null)
 		{			
-			systems.add(system);
-			system.start();
-			LOGGER.log(Level.INFO, "Started system: " + system.getClass().getSimpleName());
+			LOGGER.log(Level.WARNING, "Can't add null System; skipping.");
+			return;
 		}
+		else if(systems.contains(system)==true)
+		{
+			LOGGER.log(Level.WARNING, "System (" 
+							+ system.getClass().getSimpleName() 
+							+ ") already added; skipping.");
+			return;
+		}	
+		
+		systems.add(system);
+		system.start();
+		LOGGER.log(Level.INFO, "Added system: " 
+						+ system.getClass().getSimpleName());
 	}
 
 	@Override
@@ -245,19 +296,25 @@ public class Core implements ICore
 	@Override
 	public void generateInfoPacks(final IEntity entity)
 	{
-		if(entity!=null)
+		if(entity==null)
 		{
-			LOGGER.log(Level.FINER, "Generated packs for (" + entity + ")"
-					+ " | " + entity.getName() +" (ID: " +  entity.getID() + ")");
-			removeAllInfoPacksFrom(entity);
-			AbstractInfoPack pack = entityPacks.get(entity);
+			LOGGER.log(Level.WARNING, "Can't generate for null entity; skipping.");
+			return;
+		}
 
-			for(IInfoPack each:factories)
-			{//For each type of factory...
-				addInfoPack(each.generate(entity));
+		removeAllInfoPacksFrom(entity);	//Remove existing packs
+		for(IInfoPack each:factories)
+		{//For each type of factory...
+			IInfoPack pack = each.generate(entity);
+			if(pack!=null)
+			{				
+				addInfoPack(pack);
 			}
 		}
 		entity.setChanged(false);
+		LOGGER.log(Level.FINER, "Generated packs for (" 
+									+ entity.getName() 
+									+" | ID: " +  entity.getID() + ")");
 	}
 	
 	@Override
@@ -500,14 +557,14 @@ public class Core implements ICore
 	 * @param id		the ID of the message
 	 * @param message	the message
 	 */
-	public void send(final String id, final String... message)
+	public void send(final Enum<?> id, final String... message)
 	{
-		if(subscribers.containsKey(id))
+		if(subscribers.containsKey(id.name()))
 		{
-			Iterator<ISystem> systems = subscribers.get(id).iterator();
+			Iterator<ISystem> systems = subscribers.get(id.name()).iterator();
 			while(systems.hasNext())
 			{
-				systems.next().recv(id, message);
+				systems.next().recv(id.name(), message);
 			}
 		}
 	}
@@ -517,15 +574,15 @@ public class Core implements ICore
 	 * @param system		the System that is interested
 	 * @param messageID		the message ID the system is interested in
 	 */
-	public void setInterested(final ISystem system, final String messageID)
+	public void setInterested(final ISystem system, final Enum<?> messageID)
 	{
-		if(system!=null&&messageID!=null)
+		if(system!=null&&messageID.name()!=null)
 		{		
-			LOGGER.log(Level.CONFIG, system.getClass().getSimpleName() + " interested in: " + messageID);
+			LOGGER.log(Level.CONFIG, system.getClass().getSimpleName() + " interested in: " + messageID.name());
 
-			if(subscribers.containsKey(messageID))
+			if(subscribers.containsKey(messageID.name()))
 			{//If another system has already expressed interest in the message
-				ArrayList<ISystem> systems = subscribers.get(messageID);
+				ArrayList<ISystem> systems = subscribers.get(messageID.name());
 				if(systems.contains(system)==false)
 				{
 					//Add it to the list if it is not already in there.
@@ -537,7 +594,7 @@ public class Core implements ICore
 				//Else if the key is genuinely new...
 				ArrayList<ISystem> systems = new ArrayList<ISystem>();
 				systems.add(system);
-				subscribers.put(messageID, systems);
+				subscribers.put(messageID.name(), systems);
 			}
 		}
 	}

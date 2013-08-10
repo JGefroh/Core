@@ -1,13 +1,12 @@
 package com.jgefroh.core;
 
-//TODO: Remove
 /**
  * Interface for an {@code InfoPack}.
  * 
  * <p>
  * An {@code InfoPack} is intended to provide a {@code System} access 
  * to data held in a {@code component} via accessor methods 
- * (getters/setters). They group together one or more {@code Components}
+ * (getters/setters). They group together one or more related {@code Components}
  * that contain data needed by a {@code System}.
  * <br>
  * <br>
@@ -23,8 +22,6 @@ package com.jgefroh.core;
  * @see		Core
  * @see		IComponent
  * @see		ISystem
- * @version	0.1.0
- * @since 	0.1.0
  */
 public interface IInfoPack
 {

@@ -15,8 +15,6 @@ import java.util.logging.Logger;
  * </p>
  * 
  * @author Joseph Gefroh
- * @version 0.4.0
- * @since 0.1.0
  */
 public abstract class LoggerFactory
 {	
@@ -33,7 +31,7 @@ public abstract class LoggerFactory
 	{
 		Logger LOGGER = Logger.getLogger(type.getName());
 		ConsoleHandler ch = new ConsoleHandler();
-		ch.setLevel(debugLevel);
+		ch.setLevel(Level.ALL);
 		LOGGER.addHandler(ch);
 		LOGGER.setLevel(debugLevel);
 		LOGGER.setUseParentHandlers(false);
