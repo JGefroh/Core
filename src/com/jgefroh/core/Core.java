@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * An implementation of the {@code ICore} interface using adapters.
+ * The heart of the Core framework.
  * 
  * 
  * <p>
@@ -21,7 +21,6 @@ import java.util.logging.Logger;
  * </p>
  * 
  * @author 	Joseph Gefroh
- * @see		ICore
  * @see     IInfoPack
  * @see     IComponent
  */
@@ -203,7 +202,7 @@ public class Core {
     /**
      * Gets the ISystem.
      * @param type	the type of ISystem to get
-     * @return
+     * @return  the system if found; null otherwise
      */
     public <T extends ISystem> T getSystem(final Class<T> type) {
         Iterator<ISystem> sysIter = systems.iterator();
@@ -270,8 +269,8 @@ public class Core {
     }
 
     /**
-     * Stops tracking the passed Entity.
-     * @param entity	the entity to stop tracking
+     * Stops tracking the entity with the passed id.
+     * @param id    the id of the entity to stop tracking
      */
     public void removeEntity(final String id) {
         removeEntity(entitiesByID.get(id));
@@ -433,7 +432,7 @@ public class Core {
 
     /**
      * Returns the flag that indicates that non-critical systems are paused.
-     * @return	true if paused;false otherwise
+     * @return	true if paused; false otherwise
      */
     public boolean isPaused() {
         return this.isPaused;
@@ -462,8 +461,8 @@ public class Core {
 
     /**
      * Marks the {@code System} as interested in messages of a given type.
-     * @param system		the System that is interested
-     * @param messageID		the message ID the system is interested in
+     * @param system	   the System that is interested
+     * @param messageType  the message type the system is interested in
      */
     public void setInterested(final ISystem system, final IMessage messageType) {
         if (system == null) {
