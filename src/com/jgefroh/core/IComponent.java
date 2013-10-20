@@ -20,12 +20,7 @@ package com.jgefroh.core;
  * @author 	Joseph Gefroh
  * @see		IEntity
  */
-public interface IComponent
-{
-	/**
-	 * Initializes this {@code Component} with some default settings.
-	 */
-	public void init();
+public interface IComponent {
 	
 	/**
 	 * Sets the owner of this {@code Component}.

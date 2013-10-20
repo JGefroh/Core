@@ -1,5 +1,6 @@
 package com.jgefroh.core;
 
+
 /**
  * Interface for an {@code InfoPack}.
  * 
@@ -23,52 +24,38 @@ package com.jgefroh.core;
  * @see		IComponent
  * @see		ISystem
  */
-public interface IInfoPack
-{
-	/**
-	 * Returns the {@code Entity} associated with this {@code InfoPack}.
-	 * @return	the {@code Entity} that is considered the owner of this
-	 * 			{@code InfoPack}
-	 * @since 	0.1.0
-	 */
-	public IEntity getOwner();
+public interface IInfoPack {
 
-	/**
-	 * Checks to see if this {@code InfoPack} is invalid or unreliable.
-	 * 
-	 * Validity is determined by whether the {@code Entity} has the
-	 * {@code components} this {@code InfoPack} requires.
-	 * @return	{@code true} if this {@code InfoPack} is unreliable;
-	 * 			{@code false} otherwise
-	 * @since 	0.1.0
-	 */
-	public boolean checkDirty();
-	
-	/**
-	 * Returns the flag that indicates this {@code InfoPack} is invalid.
-	 * 
-	 * Validity is determined by whether the {@code Entity} has the
-	 * {@code components} this {@code InfoPack} requires.
-	 * @return	{@code true} if this {@code InfoPack} is unreliable;
-	 * 			{@code false} otherwise
-	 */
-	public boolean isDirty();
-	
-	
-	/**
-	 * Sets the flag that indicates this {@code InfoPack} is invalid.
-	 * @param isDirty	{@code true} if this {@code InfoPack} 
-	 * 					is unreliable; {@code false} otherwise
-	 * @since 0.1.0
-	 */
-	public void setDirty(final boolean isDirty);
-	
-	
-	/**
-	 * Creates a new instance of this {@code InfoPack} if the passed
-	 * {@code Entity} has the proper components.
-	 * @param entity
-	 * @return the instance of this {@code InfoPack}
-	 */
-	public IInfoPack generate(final IEntity entity);
+    /**
+     * Sets the entity that the info pack is currently pointing to.
+     * @param entity    the entity to point to
+     */
+    public void setCurrent(final IEntity entity);
+
+    /**
+     * Checks to see if the entity has the required components to use this info pack.
+     * @param entity    the entity to check
+     * @return  true if the entity can use the pack; false otherwise
+     */
+    public boolean checkComponents(final IEntity entity);
+
+    /**
+     * Points this adapter towards the passed entity and its components.
+     * @param entity    the entity to point at
+     * @return  true if successfully pointed; false otherwise
+     */
+    public boolean setEntity(final IEntity entity);
+
+    /**
+     * Gets a reference to the ntity currently being pointed to.
+     * @return  the entity being pointed to
+     */
+    public IEntity getEntity();
+
+    /**
+     * Creates a new instance of this object.
+     * @param type  the type of object to create
+     * @return      the created object; null if unsucessful
+     */
+    public <T extends IInfoPack> T create(final Class<T> type);
 }

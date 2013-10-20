@@ -6,38 +6,34 @@ import com.jgefroh.core.IEntity;
 /**
  * A base implementation of IComponent for convenience.
  * 
- * 
+ * <p>Extend this to create your own components.</p>
  * @author Joseph Gefroh
  */
-public abstract class AbstractComponent implements IComponent
-{
-	//////////
-	// DATA
-	//////////
-	/**The owner of this component.*/
-	private IEntity owner;
-	
-	//////////
-	// INIT
-	//////////
-	@Override
-	public abstract void init();
+public abstract class AbstractComponent implements IComponent {
 
-	//////////
-	// GETTERS
-	//////////
-	@Override
-	public IEntity getOwner()
-	{
-		return this.owner;
-	}
-	
-	//////////
-	// SETTERS
-	//////////
-	@Override
-	public void setOwner(final IEntity owner)
-	{
-		this.owner = owner;
-	}
+    //////////////////////////////////////////////////
+    // Fields
+    //////////////////////////////////////////////////
+    /**The owner of this component.*/
+    private IEntity owner;
+
+
+    //////////////////////////////////////////////////
+    // Getters
+    //////////////////////////////////////////////////
+    
+    @Override
+    public IEntity getOwner() {
+        return this.owner;
+    }
+
+    
+    //////////////////////////////////////////////////
+    // Setters
+    //////////////////////////////////////////////////
+    
+    @Override
+    public void setOwner(final IEntity owner) {
+        this.owner = owner;
+    }
 }

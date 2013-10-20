@@ -1,6 +1,6 @@
 package com.jgefroh.core;
 
-import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The interface for a {@code System}.
@@ -80,13 +80,7 @@ public interface ISystem
 	 * Sends a message to this {@code System}.
 	 * @param message	the message to send
 	 */
-	public void recv(final String id, final String... message);
-	
-	/**
-	 * Sends a message to this {@code System}.
-	 * @param message	the values sent with this message
-	 */
-	public void recv(final String id, final HashMap<String, String> map);
+	public void recv(final IMessage messageType, final Map<IPayload, String> message);
 	
 	/**
 	 * Gets the flag that indicates this system is running.
