@@ -42,8 +42,8 @@ public class Core {
     /**Holds the entities, sorted by ID.*/
     private Map<Class<? extends IInfoPack>, List<IEntity>> entitiesByPack;
 
-    /**Holds a list of systems subscribed to different message IDs*/
-    private Map<IMessage, List<ISystem>> messageSubscribers;
+    /**Holds a list of message handlers stored by message type.*/
+    private Map<Class<? extends IMessage>, List<IMessageHandler<? extends IMessage>>> handlersByMessage;
 
     /**The last ID that was assigned to an entity.*/
     private long lastID;
@@ -68,8 +68,8 @@ public class Core {
         infoPacksByType = new HashMap<Class<? extends IInfoPack>, IInfoPack>();
         systems = new ArrayList<ISystem>();
         entitiesByID = new HashMap<String, IEntity>();
-        messageSubscribers = new HashMap<IMessage, List<ISystem>>();
         entitiesByPack = new HashMap<Class<? extends IInfoPack>, List<IEntity>>();
+        handlersByMessage = new HashMap<Class<? extends IMessage>, List<IMessageHandler<? extends IMessage>>>();
         this.timeLastChecked = System.nanoTime();
         LOGGER.log(Level.INFO, "Core initialized.");
     }
@@ -444,43 +444,37 @@ public class Core {
     //////////////////////////////////////////////////
     
     /**
-     * Sends a message to all interested {@code Systems}.
-     * @param messageType	the type of message
-     * @param message		the actual message contents
+     * Registers a handler for messages of the specified type.
+     * @param type  the class type of message to look for
+     * @param handler   the handler of the message
      */
-    public void send(final IMessage messageType, final Map<IPayload, String> message) {
-        List<ISystem> interestedSystems = messageSubscribers.get(messageType);
-
-        if (interestedSystems != null) {
-            Iterator<ISystem> systems = interestedSystems.iterator();
-            while (systems.hasNext()) {
-                systems.next().recv(messageType, message);
+    public <T extends IMessage>void addHandler(final Class<T> type, final IMessageHandler<T> handler) {
+        List<IMessageHandler<? extends IMessage>> handlers = handlersByMessage.get(type);
+        
+        if (handlers == null) {
+            handlers = new ArrayList<IMessageHandler<? extends IMessage>>();
+            handlersByMessage.put(type, handlers);
+        }
+        
+        if (!handlers.contains(handler)) {
+            handlers.add(handler);
+        }
+    }
+    
+    /**
+     * Sends the passed message to all interested systems.
+     * @param message   the message to send
+     */
+    public <T extends IMessage> void send(final T message) {
+        List<IMessageHandler<? extends IMessage>> handlers = handlersByMessage.get(message.getClass());
+        
+        if (handlers != null) {
+            for (IMessageHandler<? extends IMessage> handler : handlers) {
+                ((IMessageHandler<T>) handler).onMessageReceived(message);
             }
         }
     }
-
-    /**
-     * Marks the {@code System} as interested in messages of a given type.
-     * @param system	   the System that is interested
-     * @param messageType  the message type the system is interested in
-     */
-    public void setInterested(final ISystem system, final IMessage messageType) {
-        if (system == null) {
-            return;
-        }
-        LOGGER.log(Level.CONFIG, system.getClass().getSimpleName() + " interested in: " + messageType);
-        List<ISystem> systems = messageSubscribers.get(messageType);
-
-        if (systems == null) { //If no prior systems have set interest...
-            systems = new ArrayList<ISystem>();
-            systems.add(system);
-            messageSubscribers.put(messageType, systems);
-        }
-        else if (!systems.contains(system)) {
-            systems.add(system); //If the system is not already interested...
-        }
-    }
-
+    
     /**
      * Sets the debug level of Core.
      * @param level	the Level to set

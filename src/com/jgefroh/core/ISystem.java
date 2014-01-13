@@ -80,7 +80,7 @@ public interface ISystem
 	 * Sends a message to this {@code System}.
 	 * @param message	the message to send
 	 */
-	public void recv(final IMessage messageType, final Map<IPayload, String> message);
+	public <T extends IMessage>void recv(final T message);
 	
 	/**
 	 * Gets the flag that indicates this system is running.

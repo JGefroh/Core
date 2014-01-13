@@ -1,7 +1,6 @@
 package com.jgefroh.core;
 
 
-import java.util.Map;
 
 
 /**
@@ -66,7 +65,7 @@ public abstract class AbstractSystem implements ISystem {
     }
 
     @Override
-    public void recv(final IMessage messageType, final Map<IPayload, String> message) {
+    public <T extends IMessage>void recv(final T message) { 
     }
 
     @Override
