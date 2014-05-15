@@ -16,6 +16,6 @@ Disclaimer: As a WIP, Core's functionality may change greatly between versions.
 1. Check out the [Javadoc](http://jgefroh.github.io/Core/doc/index.html).
 2. Code to your heart's content.
 
-
+ 
 ==========
 Copyright Joseph Gefroh, 2013.
