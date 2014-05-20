@@ -1,0 +1,22 @@
+apply plugin: 'java'
+
+archivesBaseName = 'core'
+sourceCompatibility = 1.7
+version = '0.9.0'
+
+task printIntro {
+    println "Building project..."
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+            exclude '**packageinfo**'
+        }
+    }
+}
+
+jar {
+    from "README.md"
+}
